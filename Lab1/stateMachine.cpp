@@ -27,6 +27,7 @@ private:
   bool task0()
   {
     sparki.moveRight(1);
+    delay(100);
 
     int cm = sparki.ping();
 
@@ -47,6 +48,7 @@ private:
   bool task1()
   {
     sparki.moveForward();
+    delay(100);
     int cm = sparki.ping();
 
     if(cm < 7)
@@ -63,6 +65,7 @@ private:
   bool task2()
   {
     sparki.gripperClose();
+    delay(500);
 
     currentState += 1;
     printState();
@@ -75,6 +78,7 @@ private:
   bool task3()
   {
     sparki.moveRight(180);
+    delay(1000);
 
     currentState += 1;
     printState();   
@@ -95,6 +99,7 @@ private:
     if ( lineLeft >= threshold || lineCenter >= threshold || lineRight >= threshold) // move until line is found
     {  
      sparki.moveForward(); // move forward
+     delay(100);
     }
     else
     {
@@ -119,17 +124,20 @@ private:
     if ( lineCenter < threshold ) // if line is below left line sensor
     {  
       sparki.moveForward(); // move forward
+      delay(100);
     }
     else
     {
       if ( lineLeft < threshold ) // if line is below left line sensor
       {  
         sparki.moveLeft(); // turn left
+        delay(100);
       }
     
       if ( lineRight < threshold ) // if line is below right line sensor
       {  
         sparki.moveRight(); // turn right
+        delay(100);
       }    
     }
 
@@ -152,6 +160,7 @@ private:
 
     sparki.beep();
     sparki.gripperOpen();
+    delay(500);
 
     currentState += 1;
     printState();  

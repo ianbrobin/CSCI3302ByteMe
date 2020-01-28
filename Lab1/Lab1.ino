@@ -17,5 +17,6 @@ void loop() {
   // put your main code here, to run repeatedly
 
   sm.TryNext();
+  delay(1000);
 
 }
