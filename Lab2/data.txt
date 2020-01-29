@@ -1,0 +1,3 @@
+Time for 30 cm: 10774 milsec
+Speed in m/s: 0.027845
+
