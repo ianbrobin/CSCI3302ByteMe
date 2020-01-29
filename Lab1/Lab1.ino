@@ -7,7 +7,7 @@ StateMachine sm;
 void setup() {
   // put your setup code here, to run once:
   //sparki.ping();
-  sparki.print("test");
+  
   
   sm = StateMachine();
 }
