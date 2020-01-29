@@ -1,3 +1,4 @@
 Time for 30 cm: 10774 milsec
 Speed in m/s: 0.027845
-
+Speed to go 360: 9518
+Rotational speed degress/sec: 37.82
