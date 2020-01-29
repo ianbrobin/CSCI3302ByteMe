@@ -5,6 +5,7 @@ class StateMachine
 private:
   int currentState = 0;
 
+  //reset sparki state
   void init()
   {
    currentState = 0;
@@ -12,6 +13,7 @@ private:
    sparki.servo(SERVO_CENTER); 
   }
 
+  //print current state ID to LCD
   void printState()
   {
       sparki.clearLCD();
@@ -20,9 +22,12 @@ private:
       sparki.updateLCD();
   }
 
-  void task1()
+
+  //Rotate right until an object is found within 30cm
+  bool task0()
   {
     sparki.moveRight(1);
+    delay(100);
 
     int cm = sparki.ping();
 
@@ -35,11 +40,15 @@ private:
       currentState += 1;
       printState();
     }
+
+    return true;
   }
 
-  void task2()
+  //Move forward until object is within 7cm
+  bool task1()
   {
     sparki.moveForward();
+    delay(100);
     int cm = sparki.ping();
 
     if(cm < 7)
@@ -47,19 +56,117 @@ private:
       currentState += 1;
       printState();
     }
+
+    return true;
   }
 
-  void task3()
+  
+  //Close hands
+  bool task2()
   {
+    sparki.moveStop();
     sparki.gripperClose();
+    delay(1000);
 
     currentState += 1;
     printState();
+
+    return true;
   }
 
-  void task4()
+
+  //Rotate 180 degrees
+  bool task3()
   {
-    sparki.moveStop();
+    sparki.moveRight(180);
+    delay(1000);
+
+    currentState += 1;
+    printState();   
+
+    return true;
+  }
+
+
+  //Drive forward until sparki is on a line
+  bool task4()
+  {
+    int threshold = 700;
+
+    int lineLeft   = sparki.lineLeft();   // measure the left IR sensor
+    int lineCenter = sparki.lineCenter(); // measure the center IR sensor
+    int lineRight  = sparki.lineRight();  // measure the right IR sensor
+    
+    if ( lineLeft >= threshold || lineCenter >= threshold || lineRight >= threshold) // move until line is found
+    {  
+     sparki.moveForward(); // move forward
+     delay(100);
+    }
+    else
+    {
+      sparki.moveStop();
+      currentState += 1;
+      printState();  
+    }
+
+    return true;
+  }
+
+
+  //Follow line until sparki reaches the start marker
+  bool task5()
+  {
+    int threshold = 700;
+
+    int lineLeft   = sparki.lineLeft();   // measure the left IR sensor
+    int lineCenter = sparki.lineCenter(); // measure the center IR sensor
+    int lineRight  = sparki.lineRight();  // measure the right IR sensor
+    
+    if ( lineCenter < threshold ) // if line is below left line sensor
+    {  
+      sparki.moveForward(); // move forward
+      delay(100);
+    }
+    else
+    {
+      if ( lineLeft < threshold ) // if line is below left line sensor
+      {  
+        sparki.moveLeft(); // turn left
+        delay(100);
+      }
+    
+      if ( lineRight < threshold ) // if line is below right line sensor
+      {  
+        sparki.moveRight(); // turn right
+        delay(100);
+      }    
+    }
+
+    //found start
+    if(lineCenter < threshold && lineLeft < threshold && lineRight < threshold)
+    {
+      sparki.moveStop();
+      currentState += 1;
+      printState();  
+    }
+    
+
+    return true;
+  }
+
+
+  //Beep and open hands
+  bool task6()
+  {
+
+    sparki.beep();
+    sparki.gripperOpen();
+    delay(500);
+
+    currentState += 1;
+    printState();  
+
+    return true;
   }
 
 
@@ -70,29 +177,21 @@ public:
   }
 
 
-  void TryNext()
+  bool TryNext()
   {
     switch(currentState)
     {
-      case 0:
+      case 0: return task0();
+      case 1: return task1();
+      case 2: return task2();
+      case 3: return task3();
+      case 4: return task4();
+      case 5: return task5();
+      case 6: return task6();
+      default: 
       {
-        task1();
-        break;
-      }
-      case 1:
-      {
-        task2();
-        break;
-      }
-      case 2:
-      {
-        task3();
-        break;
-      }
-      case 3:
-      {
-        task4();
-        break;
+        sparki.moveStop();
+        return false;
       }
     }
     
