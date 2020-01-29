@@ -90,15 +90,7 @@ void loop() {
   
   switch (current_state) {
     case CONTROLLER_FOLLOW_LINE: {
-      unsigned long startTime2 = millis();
-      sparki.moveLeft(357);
-      unsigned long endTime2 = millis();
-      sparki.clearLCD();
-      sparki.println("Time Taken:");
-      sparki.println(endTime2 - startTime2);
-      sparki.updateLCD();
-      current_state = 5;
-      // TODO
+      followLine();
       break;
     }
     case CONTROLLER_DISTANCE_MEASURE: {
