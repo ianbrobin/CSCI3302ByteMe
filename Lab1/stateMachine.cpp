@@ -64,8 +64,9 @@ private:
   //Close hands
   bool task2()
   {
+    sparki.moveStop();
     sparki.gripperClose();
-    delay(500);
+    delay(1000);
 
     currentState += 1;
     printState();
