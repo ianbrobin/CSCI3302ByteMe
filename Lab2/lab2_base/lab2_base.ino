@@ -1,4 +1,4 @@
-#include <sparki.h>
+#include <Sparki.h>
 
 #define CYCLE_TIME .100  // seconds
 
@@ -28,8 +28,50 @@ void readSensors() {
   // distance = sparki.ping();
 }
 
+
+void followLine() {
+  readSensors();
+ 
+  if ( line_left < threshold ) // if line is below left line sensor
+  {  
+    sparki.moveLeft(); // turn left
+  }
+ 
+  if ( line_right < threshold ) // if line is below right line sensor
+  {  
+    sparki.moveRight(); // turn right
+  }
+ 
+  // if the center line sensor is the only one reading a line
+  if ( (line_center < threshold) && (line_left > threshold) && (line_right > threshold) )
+  {
+    sparki.moveForward(); // move forward
+  }  
+ 
+  sparki.clearLCD(); // wipe the screen
+ 
+  sparki.print("Line Left: "); // show left line sensor on screen
+  sparki.println(line_left);
+ 
+  sparki.print("Line Center: "); // show center line sensor on screen
+  sparki.println(line_center);
+ 
+  sparki.print("Line Right: "); // show right line sensor on screen
+  sparki.println(line_right);
+ 
+  sparki.updateLCD(); // display all of the information written to the screen
+}
+
+
 void measure_30cm_speed() {
-  // TODO
+  unsigned long startTime = millis();
+  sparki.moveForward(30);
+  unsigned long endTime = millis();
+
+  sparki.clearLCD();
+  sparki.println("Time Taken:");
+  sparki.println(endTime - startTime);
+  sparki.updateLCD();
 }
 
 
@@ -44,16 +86,22 @@ void displayOdometry() {
 void loop() {
 
   // TODO: Insert loop timing/initialization code here
+  unsigned long startTime = millis();
   
   switch (current_state) {
-    case CONTROLLER_FOLLOW_LINE:
-      // TODO
+    case CONTROLLER_FOLLOW_LINE: {
+      followLine();
       break;
-    case CONTROLLER_DISTANCE_MEASURE:
+    }
+    case CONTROLLER_DISTANCE_MEASURE: {
       measure_30cm_speed();
+      current_state++;
       break;
+    }
   }
 
+  unsigned long endTime = millis();
 
-  delay(1000*CYCLE_TIME);
+  // Ensure loop lasts 100ms every loop
+  delay(1000*CYCLE_TIME - (endTime - startTime));
 }
