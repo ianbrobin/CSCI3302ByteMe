@@ -1,6 +1,11 @@
 #include <Sparki.h>
 
 #define CYCLE_TIME .100  // seconds
+#define FORWARD 0
+#define RIGHT 1
+#define LEFT 2
+#define FORWARD_VELOCITY 0.027845 
+#define ROTATIONAL_VELOCITY 0.66
 
 // Program States
 #define CONTROLLER_FOLLOW_LINE 1
@@ -15,6 +20,8 @@ int line_right = 1000;
 
 float pose_x = 0., pose_y = 0., pose_theta = 0.;
 
+int robot_motion=FORWARD;
+
 void setup() {
   pose_x = 0.;
   pose_y = 0.;
@@ -28,38 +35,40 @@ void readSensors() {
   // distance = sparki.ping();
 }
 
+void moveRight(){
+  sparki.moveRight();
+  robot_motion=RIGHT;
+}
+
+void moveLeft(){
+  sparki.moveLeft();
+  robot_motion=LEFT;
+}
+
+void moveForward(){
+  sparki.moveForward();
+  robot_motion=FORWARD;
+}
 
 void followLine() {
   readSensors();
  
   if ( line_left < threshold ) // if line is below left line sensor
   {  
-    sparki.moveLeft(); // turn left
+    moveLeft(); // turn left
   }
  
   if ( line_right < threshold ) // if line is below right line sensor
   {  
-    sparki.moveRight(); // turn right
+    moveRight(); // turn right
   }
  
   // if the center line sensor is the only one reading a line
   if ( (line_center < threshold) && (line_left > threshold) && (line_right > threshold) )
   {
-    sparki.moveForward(); // move forward
+    moveForward(); // move forward
   }  
- 
-  sparki.clearLCD(); // wipe the screen
- 
-  sparki.print("Line Left: "); // show left line sensor on screen
-  sparki.println(line_left);
- 
-  sparki.print("Line Center: "); // show center line sensor on screen
-  sparki.println(line_center);
- 
-  sparki.print("Line Right: "); // show right line sensor on screen
-  sparki.println(line_right);
- 
-  sparki.updateLCD(); // display all of the information written to the screen
+  
 }
 
 
@@ -76,11 +85,39 @@ void measure_30cm_speed() {
 
 
 void updateOdometry() {
-  // TODO
+  float deltaX = 0;
+  float deltaY = 0;
+  float deltaTheta = 0;
+  switch(robot_motion){
+    case FORWARD:
+      deltaX = CYCLE_TIME * FORWARD_VELOCITY * cos(pose_theta);
+      deltaY = CYCLE_TIME * FORWARD_VELOCITY * sin(pose_theta);
+      break;
+    case LEFT:
+      deltaTheta = CYCLE_TIME * ROTATIONAL_VELOCITY;
+      break;
+    case RIGHT:
+      deltaTheta = -1 * CYCLE_TIME * ROTATIONAL_VELOCITY;
+      break;
+  }
+  pose_x += deltaX;
+  pose_y += deltaY;
+  pose_theta += deltaTheta;
 }
 
 void displayOdometry() {
-  // TODO
+  sparki.clearLCD(); // wipe the screen
+ 
+  sparki.print("pose_x: "); // show left line sensor on screen
+  sparki.println(pose_x);
+ 
+  sparki.print("pose_y: "); // show center line sensor on screen
+  sparki.println(pose_y);
+ 
+  sparki.print("pose_theta: "); // show right line sensor on screen
+  sparki.println(pose_theta);
+ 
+  sparki.updateLCD(); // display all of the information written to the screen
 }
 
 void loop() {
@@ -99,7 +136,8 @@ void loop() {
       break;
     }
   }
-
+  updateOdometry();
+  displayOdometry();
   unsigned long endTime = millis();
 
   // Ensure loop lasts 100ms every loop
