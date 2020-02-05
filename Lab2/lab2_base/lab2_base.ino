@@ -115,6 +115,12 @@ void updateOdometry() {
   pose_x += deltaX;
   pose_y += deltaY;
   pose_theta += deltaTheta;
+  if (pose_theta > (2 * M_PI)){
+    pose_theta -= (2 * M_PI);
+  }
+  if (pose_theta < (-2 * M_PI)){
+    pose_theta += (2 * M_PI);  
+  }
 }
 
 void displayOdometry() {
@@ -127,7 +133,7 @@ void displayOdometry() {
   sparki.println(pose_y);
  
   sparki.print("pose_theta: "); // show right line sensor on screen
-  sparki.println(pose_theta);
+  sparki.println(pose_theta * (180 / M_PI));
  
   sparki.updateLCD(); // display all of the information written to the screen
 }
