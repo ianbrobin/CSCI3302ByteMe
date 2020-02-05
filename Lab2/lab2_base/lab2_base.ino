@@ -127,13 +127,16 @@ void displayOdometry() {
   sparki.clearLCD(); // wipe the screen
  
   sparki.print("pose_x: "); // show left line sensor on screen
-  sparki.println(pose_x);
+  sparki.print(pose_x);
+  sparki.println(" m");
  
   sparki.print("pose_y: "); // show center line sensor on screen
-  sparki.println(pose_y);
+  sparki.print(pose_y);
+  sparki.println(" m");
  
   sparki.print("pose_theta: "); // show right line sensor on screen
-  sparki.println(pose_theta * (180 / M_PI));
+  sparki.print(pose_theta * (180 / M_PI));
+  sparki.println("°");
  
   sparki.updateLCD(); // display all of the information written to the screen
 }
