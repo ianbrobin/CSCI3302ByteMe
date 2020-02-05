@@ -22,6 +22,12 @@ float pose_x = 0., pose_y = 0., pose_theta = 0.;
 
 int robot_motion=FORWARD;
 
+void resetOdometry(){
+  pose_x = 0;
+  pose_y = 0;
+  pose_theta = 0;  
+}
+
 void setup() {
   pose_x = 0.;
   pose_y = 0.;
@@ -52,22 +58,6 @@ void moveForward(){
 
 void followLine() {
   readSensors();
- 
-  if ( line_left < threshold ) // if line is below left line sensor
-  {  
-    moveLeft(); // turn left
-  }
- 
-  if ( line_right < threshold ) // if line is below right line sensor
-  {  
-    moveRight(); // turn right
-  }
- 
-  // if the center line sensor is the only one reading a line
-  if ( (line_center < threshold) && (line_left > threshold) && (line_right > threshold) )
-  {
-    moveForward(); // move forward
-  }
 
   //start line
   if ( (line_center < threshold) && (line_left < threshold) && (line_right < threshold) )
@@ -75,7 +65,19 @@ void followLine() {
     resetOdometry();
     moveForward(); // move forward
   }
-  
+  else if ( line_left < threshold ) // if line is below left line sensor
+  {  
+    moveLeft(); // turn left
+  }
+  else if ( line_right < threshold ) // if line is below right line sensor
+  {  
+    moveRight(); // turn right
+  }
+  // if the center line sensor is the only one reading a line
+  else if ( (line_center < threshold) && (line_left > threshold) && (line_right > threshold) )
+  {
+    moveForward(); // move forward
+  }
 }
 
 
@@ -88,12 +90,6 @@ void measure_30cm_speed() {
   sparki.println("Time Taken:");
   sparki.println(endTime - startTime);
   sparki.updateLCD();
-}
-
-void resetOdometry(){
-  pose_x = 0;
-  pose_y = 0;
-  pose_theta = 0;  
 }
 
 void updateOdometry() {
