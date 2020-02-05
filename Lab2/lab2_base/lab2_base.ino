@@ -132,7 +132,7 @@ void displayOdometry() {
  
   sparki.print("pose_theta: "); // show right line sensor on screen
   sparki.print(pose_theta * (180 / M_PI));
-  sparki.println("°");
+  sparki.println(" degrees");
  
   sparki.updateLCD(); // display all of the information written to the screen
 }
