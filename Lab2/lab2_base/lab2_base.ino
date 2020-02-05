@@ -67,7 +67,14 @@ void followLine() {
   if ( (line_center < threshold) && (line_left > threshold) && (line_right > threshold) )
   {
     moveForward(); // move forward
-  }  
+  }
+
+  //start line
+  if ( (line_center < threshold) && (line_left < threshold) && (line_right < threshold) )
+  {
+    resetOdometry();
+    moveForward(); // move forward
+  }
   
 }
 
@@ -83,6 +90,11 @@ void measure_30cm_speed() {
   sparki.updateLCD();
 }
 
+void resetOdometry(){
+  pose_x = 0;
+  pose_y = 0;
+  pose_theta = 0;  
+}
 
 void updateOdometry() {
   float deltaX = 0;
