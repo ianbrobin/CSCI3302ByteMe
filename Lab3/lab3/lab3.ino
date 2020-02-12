@@ -1,4 +1,5 @@
 #include <Sparki.h>
+#include <math.h>
 
 #define M_PI 3.14159
 #define ROBOT_SPEED 0.0275 // meters/second
@@ -30,8 +31,8 @@ int line_center = 1000;
 int line_right = 1000;
 
 // Controller and dTheta update rule settings
-//const int current_state = CONTROLLER_GOTO_POSITION_PART2;
-const int current_state = CONTROLLER_FOLLOW_LINE;
+const int current_state = CONTROLLER_GOTO_POSITION_PART2;
+//const int current_state = CONTROLLER_FOLLOW_LINE;
 
 // Odometry bookkeeping
 float orig_dist_to_goal = 0.0;
@@ -151,6 +152,18 @@ void displayOdometry() {
   sparki.print("h: "); sparki.println(to_degrees(h_err));
 }
 
+float posError(){
+  return sqrt(pow(dest_pose_x - pose_x, 2) + pow(dest_pose_y - pose_y, 2));
+}
+
+float bearingError(){
+  return atan( (dest_pose_y - pose_y) / (dest_pose_x - pose_x) );
+}
+
+float headingError(){
+  return dest_pose_theta - pose_theta;  
+}
+
 void loop() {
   unsigned long begin_time = millis();
   unsigned long end_time = 0;
@@ -185,8 +198,12 @@ void loop() {
       // TODO: Implement solution using moveLeft, moveForward, moveRight functions
       // This case should arrest control of the program's control flow (taking as long as it needs to, ignoring the 100ms loop time)
       // and move the robot to its final destination
-
-
+      sparki.moveLeft(bearingError());
+      sparki.moveForward(posError() * 100);
+      sparki.moveLeft(headingError());
+      pose_x = dest_pose_x;
+      pose_y = dest_pose_y;
+      pose_theta = dest_pose_theta;
       break;
     case CONTROLLER_GOTO_POSITION_PART3:
       updateOdometry();
