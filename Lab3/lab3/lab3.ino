@@ -1,4 +1,4 @@
-#include <sparki.h>
+#include <Sparki.h>
 
 #define M_PI 3.14159
 #define ROBOT_SPEED 0.0275 // meters/second
@@ -8,11 +8,20 @@
 #define CONTROLLER_FOLLOW_LINE 1
 #define CONTROLLER_GOTO_POSITION_PART2 2
 #define CONTROLLER_GOTO_POSITION_PART3 3
+#define ROTATIONAL_VELOCITY 0.66
 
+// Given defines...
 #define FWD 1
 #define NONE 0
 #define BCK -1
 
+// Our Defines from lab 2
+#define FORWARD 0
+#define RIGHT 1
+#define LEFT 2
+
+
+int robot_motion=FORWARD;
 
 // Line following configuration variables
 const int threshold = 700;
@@ -21,7 +30,8 @@ int line_center = 1000;
 int line_right = 1000;
 
 // Controller and dTheta update rule settings
-const int current_state = CONTROLLER_GOTO_POSITION_PART2;
+//const int current_state = CONTROLLER_GOTO_POSITION_PART2;
+const int current_state = CONTROLLER_FOLLOW_LINE;
 
 // Odometry bookkeeping
 float orig_dist_to_goal = 0.0;
@@ -80,9 +90,38 @@ void readSensors() {
   line_center = sparki.lineCenter();
 }
 
+void resetOdometry(){
+  pose_x = 0;
+  pose_y = 0;
+  pose_theta = 0;  
+}
+
 
 void updateOdometry() {
-  // TODO: Update pose_x, pose_y, pose_theta
+  float deltaX = 0;
+  float deltaY = 0;
+  float deltaTheta = 0;
+  switch(robot_motion){
+    case FORWARD:
+      deltaX = CYCLE_TIME * ROBOT_SPEED * cos(pose_theta);
+      deltaY = CYCLE_TIME * ROBOT_SPEED * sin(pose_theta);
+      break;
+    case LEFT:
+      deltaTheta = CYCLE_TIME * ROTATIONAL_VELOCITY;
+      break;
+    case RIGHT:
+      deltaTheta = -1 * CYCLE_TIME * ROTATIONAL_VELOCITY;
+      break;
+  }
+  pose_x += deltaX;
+  pose_y += deltaY;
+  pose_theta += deltaTheta;
+  if (pose_theta > (2 * M_PI)) {
+    pose_theta -= (2 * M_PI);
+  }
+  if (pose_theta < (-2 * M_PI)) {
+    pose_theta += (2 * M_PI);  
+  }
 
   // Bound theta
   if (pose_theta > M_PI) pose_theta -= 2.*M_PI;
@@ -122,13 +161,13 @@ void loop() {
       // Useful for testing odometry updates
       readSensors();
       if (line_center < threshold) {
-        // TODO: Fill in odometry code
+        robot_motion = FORWARD;
         sparki.moveForward();
       } else if (line_left < threshold) {
-        // TODO: Fill in odometry code
+        robot_motion = LEFT;
         sparki.moveLeft();
       } else if (line_right < threshold) {
-        // TODO: Fill in odometry code
+        robot_motion = RIGHT;
         sparki.moveRight();
       } else {
         sparki.moveStop();
@@ -140,6 +179,7 @@ void loop() {
         pose_y = 0.;
         pose_theta = 0.;
       }
+      
       break;
     case CONTROLLER_GOTO_POSITION_PART2:
       // TODO: Implement solution using moveLeft, moveForward, moveRight functions
@@ -157,7 +197,7 @@ void loop() {
 
       break;
   }
-
+  updateOdometry();
   sparki.clearLCD();
   displayOdometry();
   sparki.updateLCD();
@@ -169,4 +209,3 @@ void loop() {
   else
     delay(10);
 }
-
