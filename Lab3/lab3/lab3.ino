@@ -9,7 +9,6 @@
 #define CONTROLLER_FOLLOW_LINE 1
 #define CONTROLLER_GOTO_POSITION_PART2 2
 #define CONTROLLER_GOTO_POSITION_PART3 3
-#define CONTROLLER_STOP 4
 #define ROTATIONAL_VELOCITY 0.66
 #define ULONG_MAX 9999999999
 
@@ -23,6 +22,10 @@
 #define RIGHT 1
 #define LEFT 2
 
+float p1 = .1;
+float p2 = .1;
+float p3 = .01;
+
 
 int robot_motion=FORWARD;
 
@@ -33,7 +36,7 @@ int line_center = 1000;
 int line_right = 1000;
 
 // Controller and dTheta update rule settings
-int current_state = CONTROLLER_GOTO_POSITION_PART2;
+const int current_state = CONTROLLER_GOTO_POSITION_PART3;
 //const int current_state = CONTROLLER_FOLLOW_LINE;
 
 // Odometry bookkeeping
@@ -74,7 +77,7 @@ void setup() {
   right_wheel_rotating = NONE;
 
   // Set test cases here!
-  set_pose_destination(0.1,0.1, to_radians(180));  // Goal_X_Meters, Goal_Y_Meters, Goal_Theta_Radians
+  set_pose_destination(0.15,0.05, to_radians(135));  // Goal_X_Meters, Goal_Y_Meters, Goal_Theta_Radians
 }
 
 // Sets target robot pose to (x,y,t) in units of meters (x,y) and radians (t)
@@ -149,7 +152,7 @@ float posError(){
 }
 
 float bearingError(){
-  return atan( (dest_pose_y - pose_y) / (dest_pose_x - pose_x) ) - pose_theta;
+  return atan( (dest_pose_y - pose_y) / (dest_pose_x - pose_x) );
 }
 
 float headingError(){
@@ -186,7 +189,13 @@ void loop() {
   unsigned long begin_time = millis();
   unsigned long end_time = 0;
   unsigned long delay_time = 0;
-  float bearError = 0;
+
+  float deltaDist = 0;
+  float deltaTheta = 0;
+  float ld = 0;
+  float rd = 0;
+  float lp = 0;
+  float rp = 0;
 
   switch (current_state) {
     case CONTROLLER_FOLLOW_LINE:
@@ -217,42 +226,24 @@ void loop() {
       // TODO: Implement solution using moveLeft, moveForward, moveRight functions
       // This case should arrest control of the program's control flow (taking as long as it needs to, ignoring the 100ms loop time)
       // and move the robot to its final destination
-      sparki.clearLCD();
-      sparki.println("In case 2");
-      sparki.print("BearingError() = ");
-      sparki.println(bearingError());
-      sparki.print("PosError() = ");
-      sparki.println(posError() * 100);
-      sparki.print("headingError() = ");
-      sparki.println(headingError());
-      sparki.updateLCD();
-
-      bearError = bearingError();
-      
-      sparki.moveLeft(to_degrees(bearError));
-      pose_theta += bearError;
+      sparki.moveLeft(bearingError());
       sparki.moveForward(posError() * 100);
-      sparki.moveLeft(to_degrees(headingError()));
+      sparki.moveLeft(headingError());
       pose_x = dest_pose_x;
       pose_y = dest_pose_y;
       pose_theta = dest_pose_theta;
-      current_state = CONTROLLER_STOP;
       break;
     case CONTROLLER_GOTO_POSITION_PART3:
-      updateOdometry();
-      // TODO: Implement solution using motorRotate and proportional feedback controller.
-      // sparki.motorRotate function calls for reference:
-      //      sparki.motorRotate(MOTOR_LEFT, left_dir, int(left_speed_pct*100.));
-      //      sparki.motorRotate(MOTOR_RIGHT, right_dir, int(right_speed_pct*100.));
-
-      break;
-     case CONTROLLER_STOP:
-      sparki.clearLCD();
-      sparki.println("Stopped!");
-      displayOdometry();
-      sparki.updateLCD();
+      deltaDist = p1 * posError();
+      deltaTheta = p2 * bearingError() + p3 * headingError();
+      ld = (deltaDist * 2 + AXLE_DIAMETER * deltaTheta) / 2;
+      rd = (deltaDist * 2 - AXLE_DIAMETER * deltaTheta) / 2;
+      lp = (100 * ld) / (CYCLE_TIME * ROBOT_SPEED);
+      rp = (100 * rd) / (CYCLE_TIME * ROBOT_SPEED);
+      rotateMotors((int) rp, (int) lp);
       break;
   }
+  updateOdometry();
   sparki.clearLCD();
   displayOdometry();
   sparki.updateLCD();
