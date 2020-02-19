@@ -9,6 +9,7 @@
 #define CONTROLLER_FOLLOW_LINE 1
 #define CONTROLLER_GOTO_POSITION_PART2 2
 #define CONTROLLER_GOTO_POSITION_PART3 3
+#define CONTROLLER_STOP 4
 #define ROTATIONAL_VELOCITY 0.66
 #define ULONG_MAX 9999999999
 
@@ -32,7 +33,7 @@ int line_center = 1000;
 int line_right = 1000;
 
 // Controller and dTheta update rule settings
-const int current_state = CONTROLLER_GOTO_POSITION_PART2;
+int current_state = CONTROLLER_GOTO_POSITION_PART2;
 //const int current_state = CONTROLLER_FOLLOW_LINE;
 
 // Odometry bookkeeping
@@ -73,7 +74,7 @@ void setup() {
   right_wheel_rotating = NONE;
 
   // Set test cases here!
-  set_pose_destination(0.15,0.05, to_radians(135));  // Goal_X_Meters, Goal_Y_Meters, Goal_Theta_Radians
+  set_pose_destination(0.1,0.1, to_radians(180));  // Goal_X_Meters, Goal_Y_Meters, Goal_Theta_Radians
 }
 
 // Sets target robot pose to (x,y,t) in units of meters (x,y) and radians (t)
@@ -148,7 +149,7 @@ float posError(){
 }
 
 float bearingError(){
-  return atan( (dest_pose_y - pose_y) / (dest_pose_x - pose_x) );
+  return atan( (dest_pose_y - pose_y) / (dest_pose_x - pose_x) ) - pose_theta;
 }
 
 float headingError(){
@@ -185,6 +186,7 @@ void loop() {
   unsigned long begin_time = millis();
   unsigned long end_time = 0;
   unsigned long delay_time = 0;
+  float bearError = 0;
 
   switch (current_state) {
     case CONTROLLER_FOLLOW_LINE:
@@ -215,12 +217,26 @@ void loop() {
       // TODO: Implement solution using moveLeft, moveForward, moveRight functions
       // This case should arrest control of the program's control flow (taking as long as it needs to, ignoring the 100ms loop time)
       // and move the robot to its final destination
-      sparki.moveLeft(bearingError());
+      sparki.clearLCD();
+      sparki.println("In case 2");
+      sparki.print("BearingError() = ");
+      sparki.println(bearingError());
+      sparki.print("PosError() = ");
+      sparki.println(posError() * 100);
+      sparki.print("headingError() = ");
+      sparki.println(headingError());
+      sparki.updateLCD();
+
+      bearError = bearingError();
+      
+      sparki.moveLeft(to_degrees(bearError));
+      pose_theta += bearError;
       sparki.moveForward(posError() * 100);
-      sparki.moveLeft(headingError());
+      sparki.moveLeft(to_degrees(headingError()));
       pose_x = dest_pose_x;
       pose_y = dest_pose_y;
       pose_theta = dest_pose_theta;
+      current_state = CONTROLLER_STOP;
       break;
     case CONTROLLER_GOTO_POSITION_PART3:
       updateOdometry();
@@ -230,8 +246,13 @@ void loop() {
       //      sparki.motorRotate(MOTOR_RIGHT, right_dir, int(right_speed_pct*100.));
 
       break;
+     case CONTROLLER_STOP:
+      sparki.clearLCD();
+      sparki.println("Stopped!");
+      displayOdometry();
+      sparki.updateLCD();
+      break;
   }
-  updateOdometry();
   sparki.clearLCD();
   displayOdometry();
   sparki.updateLCD();
