@@ -10,6 +10,7 @@
 #define CONTROLLER_GOTO_POSITION_PART2 2
 #define CONTROLLER_GOTO_POSITION_PART3 3
 #define ROTATIONAL_VELOCITY 0.66
+#define ULONG_MAX 9999999999
 
 // Given defines...
 #define FWD 1
@@ -43,8 +44,8 @@ float phi_l = 0., phi_r = 0.; // Wheel rotation (radians)
 
 
 // Wheel rotation vars
-float left_speed_pct = 0.;
-float right_speed_pct = 0.;
+int left_speed_pct = 0.;
+int right_speed_pct = 0.;
 int left_dir = DIR_CCW;
 int right_dir = DIR_CW;
 int left_wheel_rotating = NONE;
@@ -97,36 +98,26 @@ void resetOdometry(){
   pose_theta = 0;  
 }
 
-
 void updateOdometry() {
   float deltaX = 0;
   float deltaY = 0;
   float deltaTheta = 0;
-  switch(robot_motion){
-    case FORWARD:
-      deltaX = CYCLE_TIME * ROBOT_SPEED * cos(pose_theta);
-      deltaY = CYCLE_TIME * ROBOT_SPEED * sin(pose_theta);
-      break;
-    case LEFT:
-      deltaTheta = CYCLE_TIME * ROTATIONAL_VELOCITY;
-      break;
-    case RIGHT:
-      deltaTheta = -1 * CYCLE_TIME * ROTATIONAL_VELOCITY;
-      break;
-  }
+  
+  float leftSpeed = (left_speed_pct / 100) * ROBOT_SPEED;
+  float rightSpeed = (right_speed_pct / 100) * ROBOT_SPEED;
+  float leftDist = leftSpeed * CYCLE_TIME;
+  float rightDist = rightSpeed * CYCLE_TIME;
+
+  deltaTheta = (leftDist - rightDist) / AXLE_DIAMETER;
+  float deltaDist = (leftDist + rightDist) / 2;
+  
+  pose_theta += deltaTheta;
+  
+  deltaX = deltaDist * cos(pose_theta);
+  deltaY = deltaDist * sin(pose_theta);
+
   pose_x += deltaX;
   pose_y += deltaY;
-  pose_theta += deltaTheta;
-  if (pose_theta > (2 * M_PI)) {
-    pose_theta -= (2 * M_PI);
-  }
-  if (pose_theta < (-2 * M_PI)) {
-    pose_theta += (2 * M_PI);  
-  }
-
-  // Bound theta
-  if (pose_theta > M_PI) pose_theta -= 2.*M_PI;
-  if (pose_theta <= -M_PI) pose_theta += 2.*M_PI;
 }
 
 void displayOdometry() {
@@ -162,6 +153,32 @@ float bearingError(){
 
 float headingError(){
   return dest_pose_theta - pose_theta;  
+}
+
+void rotateMotors(int rightSpeed, int leftSpeed){
+  left_speed_pct = leftSpeed;
+  right_speed_pct = rightSpeed;
+  if (rightSpeed > 0){
+    right_wheel_rotating = FWD;
+    right_dir = DIR_CW;
+  }
+  else{
+    right_wheel_rotating = BCK;
+    rightSpeed *= -1;
+    right_dir = DIR_CCW;
+  }
+  if (leftSpeed > 0){
+    left_wheel_rotating = FWD;
+    left_dir = DIR_CCW;
+  }
+  else{
+    left_wheel_rotating = BCK;
+    leftSpeed *= -1;
+    left_dir = DIR_CW;
+  }
+  sparki.motorRotate(MOTOR_LEFT, left_dir, leftSpeed, ULONG_MAX);
+  sparki.motorRotate(MOTOR_RIGHT, right_dir, rightSpeed, ULONG_MAX);
+  
 }
 
 void loop() {
