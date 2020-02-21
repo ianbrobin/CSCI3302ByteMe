@@ -9,8 +9,8 @@
 #define CONTROLLER_FOLLOW_LINE 1
 #define CONTROLLER_GOTO_POSITION_PART2 2
 #define CONTROLLER_GOTO_POSITION_PART3 3
-#define CONTROLLER_STOP 4
 #define ROTATIONAL_VELOCITY 0.66
+#define ULONG_MAX 9999999999
 
 // Given defines...
 #define FWD 1
@@ -22,6 +22,10 @@
 #define RIGHT 1
 #define LEFT 2
 
+float p1 = .1;
+float p2 = .1;
+float p3 = .01;
+
 
 int robot_motion=FORWARD;
 
@@ -32,7 +36,7 @@ int line_center = 1000;
 int line_right = 1000;
 
 // Controller and dTheta update rule settings
-int current_state = CONTROLLER_GOTO_POSITION_PART2;
+const int current_state = CONTROLLER_GOTO_POSITION_PART3;
 //const int current_state = CONTROLLER_FOLLOW_LINE;
 
 // Odometry bookkeeping
@@ -44,8 +48,8 @@ float phi_l = 0., phi_r = 0.; // Wheel rotation (radians)
 
 
 // Wheel rotation vars
-float left_speed_pct = 0.;
-float right_speed_pct = 0.;
+int left_speed_pct = 0.;
+int right_speed_pct = 0.;
 int left_dir = DIR_CCW;
 int right_dir = DIR_CW;
 int left_wheel_rotating = NONE;
@@ -73,7 +77,7 @@ void setup() {
   right_wheel_rotating = NONE;
 
   // Set test cases here!
-  set_pose_destination(0.1,0.1, to_radians(180));  // Goal_X_Meters, Goal_Y_Meters, Goal_Theta_Radians
+  set_pose_destination(0.15,0.05, to_radians(135));  // Goal_X_Meters, Goal_Y_Meters, Goal_Theta_Radians
 }
 
 // Sets target robot pose to (x,y,t) in units of meters (x,y) and radians (t)
@@ -98,36 +102,26 @@ void resetOdometry(){
   pose_theta = 0;  
 }
 
-
 void updateOdometry() {
   float deltaX = 0;
   float deltaY = 0;
   float deltaTheta = 0;
-  switch(robot_motion){
-    case FORWARD:
-      deltaX = CYCLE_TIME * ROBOT_SPEED * cos(pose_theta);
-      deltaY = CYCLE_TIME * ROBOT_SPEED * sin(pose_theta);
-      break;
-    case LEFT:
-      deltaTheta = CYCLE_TIME * ROTATIONAL_VELOCITY;
-      break;
-    case RIGHT:
-      deltaTheta = -1 * CYCLE_TIME * ROTATIONAL_VELOCITY;
-      break;
-  }
+  
+  float leftSpeed = (left_speed_pct / 100) * ROBOT_SPEED;
+  float rightSpeed = (right_speed_pct / 100) * ROBOT_SPEED;
+  float leftDist = leftSpeed * CYCLE_TIME;
+  float rightDist = rightSpeed * CYCLE_TIME;
+
+  deltaTheta = (leftDist - rightDist) / AXLE_DIAMETER;
+  float deltaDist = (leftDist + rightDist) / 2;
+  
+  pose_theta += deltaTheta;
+  
+  deltaX = deltaDist * cos(pose_theta);
+  deltaY = deltaDist * sin(pose_theta);
+
   pose_x += deltaX;
   pose_y += deltaY;
-  pose_theta += deltaTheta;
-  if (pose_theta > (2 * M_PI)) {
-    pose_theta -= (2 * M_PI);
-  }
-  if (pose_theta < (-2 * M_PI)) {
-    pose_theta += (2 * M_PI);  
-  }
-
-  // Bound theta
-  if (pose_theta > M_PI) pose_theta -= 2.*M_PI;
-  if (pose_theta <= -M_PI) pose_theta += 2.*M_PI;
 }
 
 void displayOdometry() {
@@ -158,18 +152,50 @@ float posError(){
 }
 
 float bearingError(){
-  return atan( (dest_pose_y - pose_y) / (dest_pose_x - pose_x) ) - pose_theta;
+  return atan( (dest_pose_y - pose_y) / (dest_pose_x - pose_x) );
 }
 
 float headingError(){
   return dest_pose_theta - pose_theta;  
 }
 
+void rotateMotors(int rightSpeed, int leftSpeed){
+  left_speed_pct = leftSpeed;
+  right_speed_pct = rightSpeed;
+  if (rightSpeed > 0){
+    right_wheel_rotating = FWD;
+    right_dir = DIR_CW;
+  }
+  else{
+    right_wheel_rotating = BCK;
+    rightSpeed *= -1;
+    right_dir = DIR_CCW;
+  }
+  if (leftSpeed > 0){
+    left_wheel_rotating = FWD;
+    left_dir = DIR_CCW;
+  }
+  else{
+    left_wheel_rotating = BCK;
+    leftSpeed *= -1;
+    left_dir = DIR_CW;
+  }
+  sparki.motorRotate(MOTOR_LEFT, left_dir, leftSpeed, ULONG_MAX);
+  sparki.motorRotate(MOTOR_RIGHT, right_dir, rightSpeed, ULONG_MAX);
+  
+}
+
 void loop() {
   unsigned long begin_time = millis();
   unsigned long end_time = 0;
   unsigned long delay_time = 0;
-  float bearError = 0;
+
+  float deltaDist = 0;
+  float deltaTheta = 0;
+  float ld = 0;
+  float rd = 0;
+  float lp = 0;
+  float rp = 0;
 
   switch (current_state) {
     case CONTROLLER_FOLLOW_LINE:
@@ -200,42 +226,24 @@ void loop() {
       // TODO: Implement solution using moveLeft, moveForward, moveRight functions
       // This case should arrest control of the program's control flow (taking as long as it needs to, ignoring the 100ms loop time)
       // and move the robot to its final destination
-      sparki.clearLCD();
-      sparki.println("In case 2");
-      sparki.print("BearingError() = ");
-      sparki.println(bearingError());
-      sparki.print("PosError() = ");
-      sparki.println(posError() * 100);
-      sparki.print("headingError() = ");
-      sparki.println(headingError());
-      sparki.updateLCD();
-
-      bearError = bearingError();
-      
-      sparki.moveLeft(to_degrees(bearError));
-      pose_theta += bearError;
+      sparki.moveLeft(bearingError());
       sparki.moveForward(posError() * 100);
-      sparki.moveLeft(to_degrees(headingError()));
+      sparki.moveLeft(headingError());
       pose_x = dest_pose_x;
       pose_y = dest_pose_y;
       pose_theta = dest_pose_theta;
-      current_state = CONTROLLER_STOP;
       break;
     case CONTROLLER_GOTO_POSITION_PART3:
-      updateOdometry();
-      // TODO: Implement solution using motorRotate and proportional feedback controller.
-      // sparki.motorRotate function calls for reference:
-      //      sparki.motorRotate(MOTOR_LEFT, left_dir, int(left_speed_pct*100.));
-      //      sparki.motorRotate(MOTOR_RIGHT, right_dir, int(right_speed_pct*100.));
-
-      break;
-     case CONTROLLER_STOP:
-      sparki.clearLCD();
-      sparki.println("Stopped!");
-      displayOdometry();
-      sparki.updateLCD();
+      deltaDist = p1 * posError();
+      deltaTheta = p2 * bearingError() + p3 * headingError();
+      ld = (deltaDist * 2 + AXLE_DIAMETER * deltaTheta) / 2;
+      rd = (deltaDist * 2 - AXLE_DIAMETER * deltaTheta) / 2;
+      lp = (100 * ld) / (CYCLE_TIME * ROBOT_SPEED);
+      rp = (100 * rd) / (CYCLE_TIME * ROBOT_SPEED);
+      rotateMotors((int) rp, (int) lp);
       break;
   }
+  updateOdometry();
   sparki.clearLCD();
   displayOdometry();
   sparki.updateLCD();
