@@ -36,7 +36,7 @@ int line_center = 1000;
 int line_right = 1000;
 
 // Controller and dTheta update rule settings
-const int current_state = CONTROLLER_GOTO_POSITION_PART3;
+const int current_state = CONTROLLER_GOTO_POSITION_PART2;
 //const int current_state = CONTROLLER_FOLLOW_LINE;
 
 // Odometry bookkeeping
@@ -77,7 +77,7 @@ void setup() {
   right_wheel_rotating = NONE;
 
   // Set test cases here!
-  set_pose_destination(0.15,0.05, to_radians(135));  // Goal_X_Meters, Goal_Y_Meters, Goal_Theta_Radians
+  set_pose_destination(0.15,0.05, to_radians(180));  // Goal_X_Meters, Goal_Y_Meters, Goal_Theta_Radians
 }
 
 // Sets target robot pose to (x,y,t) in units of meters (x,y) and radians (t)
@@ -122,6 +122,15 @@ void updateOdometry() {
 
   pose_x += deltaX;
   pose_y += deltaY;
+
+//  sparki.clearLCD();
+//  sparki.println("Update Odometry");
+//  sparki.print("deltaDist:");
+//  sparki.println(deltaDist);
+//  sparki.print("deltaTheta:");
+//  sparki.println(deltaTheta);
+//  sparki.updateLCD();
+//  delay(1000);
 }
 
 void displayOdometry() {
@@ -162,6 +171,7 @@ float headingError(){
 void rotateMotors(int rightSpeed, int leftSpeed){
   left_speed_pct = leftSpeed;
   right_speed_pct = rightSpeed;
+  
   if (rightSpeed > 0){
     right_wheel_rotating = FWD;
     right_dir = DIR_CW;
@@ -180,6 +190,19 @@ void rotateMotors(int rightSpeed, int leftSpeed){
     leftSpeed *= -1;
     left_dir = DIR_CW;
   }
+
+  /*
+  sparki.clearLCD();
+  sparki.print("left speed:");
+  sparki.println(leftSpeed);
+  sparki.print("Right speed:");
+  sparki.println(rightSpeed);
+  sparki.print("left speed pct:");
+  sparki.println(left_speed_pct);
+  sparki.print("Right speed pct:");
+  sparki.println(right_speed_pct);
+  sparki.updateLCD();
+  */
   sparki.motorRotate(MOTOR_LEFT, left_dir, leftSpeed, ULONG_MAX);
   sparki.motorRotate(MOTOR_RIGHT, right_dir, rightSpeed, ULONG_MAX);
   
@@ -196,6 +219,9 @@ void loop() {
   float rd = 0;
   float lp = 0;
   float rp = 0;
+
+  float maxDist = ROBOT_SPEED * CYCLE_TIME;
+  float maxTheta = (2 * ROBOT_SPEED * CYCLE_TIME) / AXLE_DIAMETER;
 
   switch (current_state) {
     case CONTROLLER_FOLLOW_LINE:
@@ -226,9 +252,11 @@ void loop() {
       // TODO: Implement solution using moveLeft, moveForward, moveRight functions
       // This case should arrest control of the program's control flow (taking as long as it needs to, ignoring the 100ms loop time)
       // and move the robot to its final destination
-      sparki.moveLeft(bearingError());
+      
+      sparki.moveLeft(to_degrees(bearingError()));
       sparki.moveForward(posError() * 100);
-      sparki.moveLeft(headingError());
+      sparki.moveLeft(to_degrees(headingError() - bearingError()));
+      sparki.moveStop();
       pose_x = dest_pose_x;
       pose_y = dest_pose_y;
       pose_theta = dest_pose_theta;
@@ -236,10 +264,39 @@ void loop() {
     case CONTROLLER_GOTO_POSITION_PART3:
       deltaDist = p1 * posError();
       deltaTheta = p2 * bearingError() + p3 * headingError();
+      // Normalize deltaDist and deltaTheta
+      if (deltaDist > maxDist)
+        deltaDist = maxDist;
+      if (deltaTheta > maxTheta)
+        deltaTheta = maxTheta;
+        
       ld = (deltaDist * 2 + AXLE_DIAMETER * deltaTheta) / 2;
       rd = (deltaDist * 2 - AXLE_DIAMETER * deltaTheta) / 2;
       lp = (100 * ld) / (CYCLE_TIME * ROBOT_SPEED);
       rp = (100 * rd) / (CYCLE_TIME * ROBOT_SPEED);
+      
+      sparki.clearLCD();
+      sparki.println("In Loop");
+      sparki.print("deltaDist:");
+      sparki.println(deltaDist * 100);
+      sparki.print("deltaTheta:");
+      sparki.println(deltaTheta * 100);
+
+      sparki.print("X: ");
+      sparki.print(pose_x);
+      sparki.print(" Xg: ");
+      sparki.println(dest_pose_x);
+      sparki.print("Y: ");
+      sparki.print(pose_y);
+      sparki.print(" Yg: ");
+      sparki.println(dest_pose_y);
+      sparki.print("T: ");
+      sparki.print(to_degrees(pose_theta));
+      sparki.print(" Tg: ");
+      sparki.println(to_degrees(dest_pose_theta));
+      
+      sparki.updateLCD();
+      
       rotateMotors((int) rp, (int) lp);
       break;
   }
