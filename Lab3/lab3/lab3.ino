@@ -112,7 +112,7 @@ void updateOdometry() {
   float leftDist = leftSpeed * CYCLE_TIME;
   float rightDist = rightSpeed * CYCLE_TIME;
 
-  deltaTheta = (leftDist - rightDist) / AXLE_DIAMETER;
+  deltaTheta = atan((leftDist - rightDist) / AXLE_DIAMETER);
   float deltaDist = (leftDist + rightDist) / 2;
   
   pose_theta += deltaTheta;
