@@ -77,7 +77,7 @@ void setup() {
   right_wheel_rotating = NONE;
 
   // Set test cases here!
-  set_pose_destination(0.15,0.05, to_radians(135));  // Goal_X_Meters, Goal_Y_Meters, Goal_Theta_Radians
+  set_pose_destination(0.15,0.05, to_radians(180));  // Goal_X_Meters, Goal_Y_Meters, Goal_Theta_Radians
 }
 
 // Sets target robot pose to (x,y,t) in units of meters (x,y) and radians (t)
@@ -162,6 +162,7 @@ float headingError(){
 void rotateMotors(int rightSpeed, int leftSpeed){
   left_speed_pct = leftSpeed;
   right_speed_pct = rightSpeed;
+  
   if (rightSpeed > 0){
     right_wheel_rotating = FWD;
     right_dir = DIR_CW;
@@ -180,6 +181,7 @@ void rotateMotors(int rightSpeed, int leftSpeed){
     leftSpeed *= -1;
     left_dir = DIR_CW;
   }
+
   sparki.motorRotate(MOTOR_LEFT, left_dir, leftSpeed, ULONG_MAX);
   sparki.motorRotate(MOTOR_RIGHT, right_dir, rightSpeed, ULONG_MAX);
   
@@ -196,6 +198,9 @@ void loop() {
   float rd = 0;
   float lp = 0;
   float rp = 0;
+
+  float maxDist = ROBOT_SPEED * CYCLE_TIME;
+  float maxTheta = (2 * ROBOT_SPEED * CYCLE_TIME) / AXLE_DIAMETER;
 
   switch (current_state) {
     case CONTROLLER_FOLLOW_LINE:
@@ -226,9 +231,10 @@ void loop() {
       // TODO: Implement solution using moveLeft, moveForward, moveRight functions
       // This case should arrest control of the program's control flow (taking as long as it needs to, ignoring the 100ms loop time)
       // and move the robot to its final destination
-      sparki.moveLeft(bearingError());
+      sparki.moveLeft(to_degrees(bearingError()));
       sparki.moveForward(posError() * 100);
-      sparki.moveLeft(headingError());
+      sparki.moveLeft(to_degrees(headingError() - bearingError()));
+      sparki.moveStop();
       pose_x = dest_pose_x;
       pose_y = dest_pose_y;
       pose_theta = dest_pose_theta;
@@ -236,10 +242,31 @@ void loop() {
     case CONTROLLER_GOTO_POSITION_PART3:
       deltaDist = p1 * posError();
       deltaTheta = p2 * bearingError() + p3 * headingError();
+      // Normalize deltaDist and deltaTheta
+      if (deltaDist > maxDist)
+        deltaDist = maxDist;
+      if (deltaTheta > maxTheta)
+        deltaTheta = maxTheta;
+
+      if (abs(dest_pose_x) - abs(pose_x) <= 0.03 || abs(dest_pose_y) - abs(pose_y) <= 0.01) {
+        p1 = 0.03;
+        p2 = 0.2;
+        p3 = 0.001;
+      }
+        
       ld = (deltaDist * 2 + AXLE_DIAMETER * deltaTheta) / 2;
       rd = (deltaDist * 2 - AXLE_DIAMETER * deltaTheta) / 2;
       lp = (100 * ld) / (CYCLE_TIME * ROBOT_SPEED);
       rp = (100 * rd) / (CYCLE_TIME * ROBOT_SPEED);
+      
+      sparki.updateLCD();
+
+      // If we're close to final destination, anneal our constants
+      if (abs(dest_pose_x) - abs(pose_x) <= 0.03 || abs(dest_pose_y) - abs(pose_y) <= 0.01) {
+        p1 = 0.03;
+        p2 = 0.2;
+        p3 = 0.001;
+      }
       rotateMotors((int) rp, (int) lp);
       break;
   }
