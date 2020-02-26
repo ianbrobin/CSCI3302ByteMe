@@ -8,6 +8,23 @@ from std_msgs.msg import Float32MultiArray, Empty, String, Int16
 
 g_namespace = ""
 
+# Driver Constants
+CYCLE_TIME = 0.05 # 50ms cycle time
+MAP_RESOLUTION = 0.0015 # meters per pixel
+MAP_SIZE_X = 1200 # Default map size in pixels
+MAP_SIZE_Y = 800 # Default map size in pixels
+SPARKI_SIZE_RADIUS = 0.08 # 0.08m radius == 6.29in diameter 
+SPARKI_ULTRASONIC_MAX_DIST = .75 # 0.75m max range for ultrasonic sensor
+
+# ***** SERVO POSITIONS ***** #
+SPARKI_SERVO_LEFT = 80
+SPARKI_SERVO_CENTER = 0
+SPARKI_SERVO_RIGHT = -80
+SPARKI_SPEED = 0.0278 # 100% speed in m/s
+SPARKI_AXLE_DIAMETER = 0.085 # Distance between wheels, meters 
+SPARKI_WHEEL_RADIUS = 0.03 # Radius of wheels, meters
+
+
 # GLOBALS 
 pose2d_sparki_odometry = None #Pose2D message object, contains x,y,theta members in meters and radians
 #TODO: Track servo angle in radians
@@ -120,6 +137,8 @@ def cost(cell_index_from, cell_index_to):
     return 0
 
 if __name__ == "__main__":
+    default_x, default_y = 800 * MAP_RESOLUTION, 656 * MAP_RESOLUTION
+
     parser = argparse.ArgumentParser(description="Sparki Simulation Environment")
     parser.add_argument('-n','--namespace', type=str, nargs='?', default='sparki', help='Prepended string for all topics')
     parser.add_argument('-p','--startingpose', nargs=3, default=[default_x, default_y, 0.], help='Starting x, y, theta of Sparki in world coords')
