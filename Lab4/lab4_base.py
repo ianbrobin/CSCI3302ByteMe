@@ -36,6 +36,7 @@ publisher_motor = None
 publisher_odom = None
 publisher_ping = None
 publisher_servo = None
+publisher_render = None
 subscriber_odometry = None
 subscriber_state = None
 
@@ -58,6 +59,9 @@ def main(args):
         #      To create a message for changing motor speed, use Float32MultiArray()
         #      (e.g., msg = Float32MultiArray()     msg.data = [1.0,1.0]      publisher.pub(msg))
 
+        emptyArg = Empty
+        publisher_render.publish(emptyArg)
+
         #TODO: Implement loop closure here
         if False:
             rospy.loginfo("Loop Closure Triggered")
@@ -69,7 +73,7 @@ def main(args):
 
 def init(args):
     global g_namespace
-    global publisher_motor, publisher_ping, publisher_servo, publisher_odom
+    global publisher_motor, publisher_ping, publisher_servo, publisher_odom, publisher_render
     global subscriber_odometry, subscriber_state
     global pose2d_sparki_odometry
 
@@ -86,13 +90,14 @@ def init(args):
     publisher_odom = rospy.Publisher('/%s/set_odometry' % g_namespace, Pose2D, queue_size=10)
     publisher_ping = rospy.Publisher('/%s/ping_command' % g_namespace, Empty, queue_size=10)
     publisher_servo = rospy.Publisher('/%s/set_servo' % g_namespace, Int16, queue_size=10)
+    publisher_render = rospy.Publisher('/%s/render_sim' % g_namespace, Empty, queue_size=10) 
 
     #TODO: Set up your initial odometry pose (pose2d_sparki_odometry) as a new Pose2D message object
     pose2d_sparki_odometry = Pose2D()
     pose2d_sparki_odometry.x, pose2d_sparki_odometry.y, pose2d_sparki_odometry.theta = args.startingpose[0], args.startingpose[1], args.startingpose[2]
     
     #TODO: Set sparki's servo to an angle pointing inward to the map (e.g., 45)
-    deg_45 = -.785398
+    deg_45 = 45
     publisher_servo.publish(deg_45)
 
 def callback_update_odometry(data):
