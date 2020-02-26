@@ -5,6 +5,7 @@ import time
 from geometry_msgs.msg import Pose2D
 from std_msgs.msg import Float32MultiArray, Empty, String, Int16
 
+g_namespace = ""
 
 # GLOBALS 
 pose2d_sparki_odometry = None #Pose2D message object, contains x,y,theta members in meters and radians
