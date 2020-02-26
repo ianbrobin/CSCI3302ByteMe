@@ -112,7 +112,7 @@ void updateOdometry() {
   float leftDist = leftSpeed * CYCLE_TIME;
   float rightDist = rightSpeed * CYCLE_TIME;
 
-  deltaTheta = atan((leftDist - rightDist) / AXLE_DIAMETER);
+  deltaTheta = (leftDist - rightDist) / AXLE_DIAMETER;
   float deltaDist = (leftDist + rightDist) / 2;
   
   pose_theta += deltaTheta;
@@ -198,6 +198,8 @@ void loop() {
   float rd = 0;
   float lp = 0;
   float rp = 0;
+  float lpRaw = 0;
+  float rpRaw = 0;
 
   float maxDist = ROBOT_SPEED * CYCLE_TIME;
   float maxTheta = (2 * ROBOT_SPEED * CYCLE_TIME) / AXLE_DIAMETER;
@@ -243,30 +245,39 @@ void loop() {
       deltaDist = p1 * posError();
       deltaTheta = p2 * bearingError() + p3 * headingError();
       // Normalize deltaDist and deltaTheta
+      /*
       if (deltaDist > maxDist)
         deltaDist = maxDist;
       if (deltaTheta > maxTheta)
         deltaTheta = maxTheta;
-
+      */
       if (abs(dest_pose_x) - abs(pose_x) <= 0.03 || abs(dest_pose_y) - abs(pose_y) <= 0.01) {
         p1 = 0.03;
         p2 = 0.2;
         p3 = 0.001;
       }
-        
-      ld = (deltaDist * 2 + AXLE_DIAMETER * deltaTheta) / 2;
-      rd = (deltaDist * 2 - AXLE_DIAMETER * deltaTheta) / 2;
-      lp = (100 * ld) / (CYCLE_TIME * ROBOT_SPEED);
-      rp = (100 * rd) / (CYCLE_TIME * ROBOT_SPEED);
       
-      sparki.updateLCD();
+      lpRaw = (2 * deltaDist - deltaTheta * AXLE_DIAMETER) / 2 * WHEEL_RADIUS;
+      rpRaw = (2 * deltaDist + deltaTheta * AXLE_DIAMETER) / 2 * WHEEL_RADIUS;
+
+      if(lpRaw > rpRaw){
+        lp = 100;
+        rp = (lp / lpRaw) * rpRaw;
+      }
+      else{
+        rp = 100;
+        lp = (rp / rpRaw) * lpRaw;
+      }
+      
 
       // If we're close to final destination, anneal our constants
+      /*
       if (abs(dest_pose_x) - abs(pose_x) <= 0.03 || abs(dest_pose_y) - abs(pose_y) <= 0.01) {
         p1 = 0.03;
         p2 = 0.2;
         p3 = 0.001;
       }
+      */
       rotateMotors((int) rp, (int) lp);
       break;
   }
