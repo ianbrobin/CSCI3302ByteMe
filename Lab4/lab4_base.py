@@ -50,13 +50,16 @@ def main(args):
 
 
 def init(args):
+    global g_namespace
+    global publisher_motor, publisher_ping, publisher_servo, publisher_odom
+    global subscriber_odometry, subscriber_state
+    global pose2d_sparki_odometry
+
     g_namespace = args.namespace
     rospy.init_node("sparki_mapper_%s" % g_namespace)
 
 
-    global publisher_motor, publisher_ping, publisher_servo, publisher_odom
-    global subscriber_odometry, subscriber_state
-    global pose2d_sparki_odometry
+    
     #TODO: Set up your publishers and subscribers
     subscriber_odometry = rospy.Subscriber("/%s/odometry" % g_namespace, Pose2D, callback_update_odometry)
     subscriber_state = rospy.Subscriber('/%s/state' % g_namespace, String, callback_update_state)
