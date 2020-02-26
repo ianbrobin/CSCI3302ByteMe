@@ -25,13 +25,13 @@ subscriber_state = None
 IR_THRESHOLD = 300 # IR sensor threshold for detecting black track. Change as necessary.
 CYCLE_TIME = 0.1 # In seconds
 
-def main():
+def main(args):
     global publisher_motor, publisher_ping, publisher_servo, publisher_odom
     global IR_THRESHOLD, CYCLE_TIME
     global pose2d_sparki_odometry
 
     #TODO: Init your node to register it with the ROS core
-    init()
+    init(args)
 
     while not rospy.is_shutdown():
         #TODO: Implement CYCLE TIME
@@ -49,7 +49,11 @@ def main():
 
 
 
-def init():
+def init(args):
+    g_namespace = args.namespace
+    rospy.init_node("sparki_mapper_%s" % g_namespace)
+
+
     global publisher_motor, publisher_ping, publisher_servo, publisher_odom
     global subscriber_odometry, subscriber_state
     global pose2d_sparki_odometry
@@ -64,6 +68,9 @@ def init():
 
 
     #TODO: Set up your initial odometry pose (pose2d_sparki_odometry) as a new Pose2D message object
+    
+    
+    
     #TODO: Set sparki's servo to an angle pointing inward to the map (e.g., 45)
 
 def callback_update_odometry(data):
@@ -108,6 +115,11 @@ def cost(cell_index_from, cell_index_to):
     return 0
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Sparki Simulation Environment")
+    parser.add_argument('-n','--namespace', type=str, nargs='?', default='sparki', help='Prepended string for all topics')
+    parser.add_argument('-p','--startingpose', nargs=3, default=[default_x, default_y, 0.], help='Starting x, y, theta of Sparki in world coords')
+    args = parser.parse_args()
+
+    main(args)
 
 
