@@ -72,7 +72,8 @@ def init(args):
 
     #TODO: Set up your initial odometry pose (pose2d_sparki_odometry) as a new Pose2D message object
     
-    
+    pose2d_sparki_odometry = Pose2D()
+    pose2d_sparki_odometry.x, pose2d_sparki_odometry.y, pose2d_sparki_odometry.theta = args.startingpose[0], args.startingpose[1], args.startingpose[2]
     
     #TODO: Set sparki's servo to an angle pointing inward to the map (e.g., 45)
 
