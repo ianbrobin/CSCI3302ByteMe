@@ -65,9 +65,11 @@ def init(args):
     subscriber_state = rospy.Subscriber('/%s/state' % g_namespace, String, callback_update_state)
 
     publisher_motor = rospy.Publisher('/%s/motor_command' % g_namespace, Float32MultiArray, queue_size=10)
-    publisher_odom = rospy.Publisher('/%s/ping_command' % g_namespace, Empty, queue_size=10)
-    publisher_ping = rospy.Publisher('/%s/set_odometry' % g_namespace, Pose2D, queue_size=10)
+    publisher_odom = rospy.Publisher('/%s/set_odometry' % g_namespace, Empty, queue_size=10)
+    publisher_ping = rospy.Publisher('/%s/ping_command' % g_namespace, Pose2D, queue_size=10)
     publisher_servo = rospy.Publisher('/%s/set_servo' % g_namespace, Int16, queue_size=10)
+
+    publisher_servo.publish(-45);
 
 
     #TODO: Set up your initial odometry pose (pose2d_sparki_odometry) as a new Pose2D message object
