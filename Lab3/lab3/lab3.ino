@@ -77,7 +77,7 @@ void setup() {
   right_wheel_rotating = NONE;
 
   // Set test cases here!
-  set_pose_destination(0.15,0.05, to_radians(180));  // Goal_X_Meters, Goal_Y_Meters, Goal_Theta_Radians
+  set_pose_destination(0.05, 0.08, to_radians(90));  // Goal_X_Meters, Goal_Y_Meters, Goal_Theta_Radians
 }
 
 // Sets target robot pose to (x,y,t) in units of meters (x,y) and radians (t)
@@ -200,6 +200,7 @@ void loop() {
   float rp = 0;
   float lpRaw = 0;
   float rpRaw = 0;
+  bool flag = false;
 
   float maxDist = ROBOT_SPEED * CYCLE_TIME;
   float maxTheta = (2 * ROBOT_SPEED * CYCLE_TIME) / AXLE_DIAMETER;
@@ -242,46 +243,50 @@ void loop() {
       pose_theta = dest_pose_theta;
       break;
     case CONTROLLER_GOTO_POSITION_PART3:
-      deltaDist = p1 * posError();
-      deltaTheta = p2 * bearingError() + p3 * headingError();
-      // Normalize deltaDist and deltaTheta
-      /*
-      if (deltaDist > maxDist)
-        deltaDist = maxDist;
-      if (deltaTheta > maxTheta)
-        deltaTheta = maxTheta;
-      */
-      if (abs(dest_pose_x) - abs(pose_x) <= 0.03 || abs(dest_pose_y) - abs(pose_y) <= 0.01) {
-        p1 = 0.03;
-        p2 = 0.2;
-        p3 = 0.001;
+      // Stop Condition
+      if (!(abs(dest_pose_x) - abs(pose_x) <= 0.02 && abs(dest_pose_y) - abs(pose_y) <= 0.02)) {
+        deltaDist = p1 * posError();
+        deltaTheta = p2 * bearingError() + p3 * headingError();
+        // Normalize deltaDist and deltaTheta
+        /*
+        if (deltaDist > maxDist)
+          deltaDist = maxDist;
+        if (deltaTheta > maxTheta)
+          deltaTheta = maxTheta;
+        */
+        
+        
+        lpRaw = (2 * deltaDist - deltaTheta * AXLE_DIAMETER) / 2 * WHEEL_RADIUS;
+        rpRaw = (2 * deltaDist + deltaTheta * AXLE_DIAMETER) / 2 * WHEEL_RADIUS;
+  
+        if(lpRaw > rpRaw){
+          lp = 100;
+          rp = (lp / lpRaw) * rpRaw;
+        }
+        else{
+          rp = 100;
+          lp = (rp / rpRaw) * lpRaw;
+        }
+        
+  
+        // If we're close to final destination, anneal our constants
+        
+        if (abs(dest_pose_x) - abs(pose_x) <= 0.05 || abs(dest_pose_y) - abs(pose_y) <= 0.05) {
+          p1 = 0.03;
+          p2 = 0.2;
+          p3 = 0.001;
+        }
+        
+        rotateMotors((int) rp, (int) lp);
       }
-      
-      lpRaw = (2 * deltaDist - deltaTheta * AXLE_DIAMETER) / 2 * WHEEL_RADIUS;
-      rpRaw = (2 * deltaDist + deltaTheta * AXLE_DIAMETER) / 2 * WHEEL_RADIUS;
-
-      if(lpRaw > rpRaw){
-        lp = 100;
-        rp = (lp / lpRaw) * rpRaw;
+      else {
+        sparki.moveStop();
+        flag = true;
       }
-      else{
-        rp = 100;
-        lp = (rp / rpRaw) * lpRaw;
-      }
-      
-
-      // If we're close to final destination, anneal our constants
-      /*
-      if (abs(dest_pose_x) - abs(pose_x) <= 0.03 || abs(dest_pose_y) - abs(pose_y) <= 0.01) {
-        p1 = 0.03;
-        p2 = 0.2;
-        p3 = 0.001;
-      }
-      */
-      rotateMotors((int) rp, (int) lp);
       break;
   }
-  updateOdometry();
+  if (!(flag))
+    updateOdometry();
   sparki.clearLCD();
   displayOdometry();
   sparki.updateLCD();
