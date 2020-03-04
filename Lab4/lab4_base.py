@@ -59,8 +59,8 @@ def main(args):
         #      To create a message for changing motor speed, use Float32MultiArray()
         #      (e.g., msg = Float32MultiArray()     msg.data = [1.0,1.0]      publisher.pub(msg))
 
-        emptyArg = Empty
-        publisher_render.publish(emptyArg)
+        #emptyArg = Empty
+        publisher_render.publish()
 
         #TODO: Implement loop closure here
         if False:
@@ -99,6 +99,7 @@ def init(args):
     #TODO: Set sparki's servo to an angle pointing inward to the map (e.g., 45)
     deg_45 = 45
     publisher_servo.publish(deg_45)
+    publisher_render.publish()
 
 def callback_update_odometry(data):
     # Receives geometry_msgs/Pose2D message
