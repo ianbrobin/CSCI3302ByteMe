@@ -15,9 +15,6 @@ MAP_SIZE_X = 1200 # Default map size in pixels
 MAP_SIZE_Y = 800 # Default map size in pixels
 SPARKI_SIZE_RADIUS = 0.08 # 0.08m radius == 6.29in diameter 
 SPARKI_ULTRASONIC_MAX_DIST = .75 # 0.75m max range for ultrasonic sensor
-line_center = 0
-line_right = 0
-line_left = 0
 
 # ***** SERVO POSITIONS ***** #
 SPARKI_SERVO_LEFT = 80
@@ -26,7 +23,7 @@ SPARKI_SERVO_RIGHT = -80
 SPARKI_SPEED = 0.0278 # 100% speed in m/s
 SPARKI_AXLE_DIAMETER = 0.085 # Distance between wheels, meters 
 SPARKI_WHEEL_RADIUS = 0.03 # Radius of wheels, meters
-SPAKI_VELOCITY=5
+SPAKI_VELOCITY=3
 
 
 # GLOBALS 
@@ -52,6 +49,7 @@ def main(args):
     global publisher_motor, publisher_ping, publisher_servo, publisher_odom
     global IR_THRESHOLD, CYCLE_TIME
     global pose2d_sparki_odometry
+    global line_center, line_right, line_left
 
     #TODO: Init your node to register it with the ROS core
     init(args)
@@ -64,6 +62,7 @@ def main(args):
         #      (e.g., msg = Float32MultiArray()     msg.data = [1.0,1.0]      publisher.pub(msg))
         motorSpeeds = Float32MultiArray()
         #motorSpeeds.data=[1.0, 1.0]
+        print("sensor:                     %f, %f, %f" % (line_left, line_center, line_right))
         if line_center < IR_THRESHOLD and line_left < IR_THRESHOLD and line_right < IR_THRESHOLD:
             # Reset Odometery
             # Move forward
@@ -98,7 +97,10 @@ def init(args):
     global publisher_motor, publisher_ping, publisher_servo, publisher_odom, publisher_render
     global subscriber_odometry, subscriber_state
     global pose2d_sparki_odometry
-
+    global line_center, line_right, line_left
+    line_center = 0
+    line_right = 0
+    line_left = 0
     g_namespace = args.namespace
     rospy.init_node("sparki_mapper_%s" % g_namespace)
 
@@ -131,11 +133,11 @@ def callback_update_odometry(data):
     #TODO: Copy this data into your local odometry variable
 
 def callback_update_state(data):
+    global line_center, line_right, line_left
     state_dict = json.loads(data.data) # Creates a dictionary object from the JSON string received from the state topic
     line_center = state_dict['light_sensors'][2]
     line_right = state_dict['light_sensors'][3]
     line_left = state_dict['light_sensors'][1]
-    print("sensor:                     %f, %f, %f" % (line_left, line_center, line_right))
     #TODO: Load data into your program's local state variables
 
 def convert_ultrasonic_to_robot_coords(x_us):
