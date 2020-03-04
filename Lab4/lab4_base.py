@@ -26,6 +26,7 @@ SPARKI_SERVO_RIGHT = -80
 SPARKI_SPEED = 0.0278 # 100% speed in m/s
 SPARKI_AXLE_DIAMETER = 0.085 # Distance between wheels, meters 
 SPARKI_WHEEL_RADIUS = 0.03 # Radius of wheels, meters
+SPAKI_VELOCITY=5
 
 
 # GLOBALS 
@@ -62,7 +63,25 @@ def main(args):
         #      To create a message for changing motor speed, use Float32MultiArray()
         #      (e.g., msg = Float32MultiArray()     msg.data = [1.0,1.0]      publisher.pub(msg))
         motorSpeeds = Float32MultiArray()
-        motorSpeeds.data=[1.0, 1.0]
+        #motorSpeeds.data=[1.0, 1.0]
+        if line_center < IR_THRESHOLD and line_left < IR_THRESHOLD and line_right < IR_THRESHOLD:
+            # Reset Odometery
+            # Move forward
+            print("Start line")
+            motorSpeeds.data=[SPAKI_VELOCITY, SPAKI_VELOCITY]
+        elif line_left < IR_THRESHOLD:
+            # Turn Left
+            print("Left")
+            motorSpeeds.data=[-1 * SPAKI_VELOCITY, SPAKI_VELOCITY]
+        elif line_right < IR_THRESHOLD:
+            # Turn right
+            print("right")
+            motorSpeeds.data=[SPAKI_VELOCITY, -1 * SPAKI_VELOCITY]
+        elif line_center < IR_THRESHOLD and line_left > IR_THRESHOLD and line_right > IR_THRESHOLD:
+            # Move forward
+            print("forward")
+            motorSpeeds.data=[SPAKI_VELOCITY, SPAKI_VELOCITY]
+        
         publisher_motor.publish(motorSpeeds)
         
         
@@ -113,9 +132,10 @@ def callback_update_odometry(data):
 
 def callback_update_state(data):
     state_dict = json.loads(data.data) # Creates a dictionary object from the JSON string received from the state topic
-    line_center = state_dict['light_sensors'][1]
-    line_right = state_dict['light_sensors'][2]
-    line_left = state_dict['light_sensors'][3]
+    line_center = state_dict['light_sensors'][2]
+    line_right = state_dict['light_sensors'][3]
+    line_left = state_dict['light_sensors'][1]
+    print("sensor:                     %f, %f, %f" % (line_left, line_center, line_right))
     #TODO: Load data into your program's local state variables
 
 def convert_ultrasonic_to_robot_coords(x_us):
