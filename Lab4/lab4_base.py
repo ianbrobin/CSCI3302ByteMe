@@ -61,14 +61,15 @@ def main(args):
         #TODO: Implement line following code here
         #      To create a message for changing motor speed, use Float32MultiArray()
         #      (e.g., msg = Float32MultiArray()     msg.data = [1.0,1.0]      publisher.pub(msg))
+        motorSpeeds = Float32MultiArray()
+        motorSpeeds.data=[1.0, 1.0]
+        publisher_motor.publish(motorSpeeds)
         
-        #emptyArg = Empty
-        publisher_render.publish()
-
+        
         #TODO: Implement loop closure here
         if False:
             rospy.loginfo("Loop Closure Triggered")
-
+        publisher_render.publish()
         rate.sleep()
 
 
