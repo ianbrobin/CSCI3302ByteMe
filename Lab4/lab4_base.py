@@ -45,7 +45,7 @@ subscriber_state = None
 
 # CONSTANTS 
 IR_THRESHOLD = 300 # IR sensor threshold for detecting black track. Change as necessary.
-CYCLE_TIME = 0.1 # In seconds
+CYCLE_HZ = 20 # In seconds
 
 def main(args):
     global publisher_motor, publisher_ping, publisher_servo, publisher_odom
@@ -54,7 +54,7 @@ def main(args):
 
     #TODO: Init your node to register it with the ROS core
     init(args)
-
+    rate = rospy.Rate(CYCLE_HZ)
     while not rospy.is_shutdown():
         #TODO: Implement CYCLE TIME
         
@@ -69,8 +69,7 @@ def main(args):
         if False:
             rospy.loginfo("Loop Closure Triggered")
 
-        #TODO: Implement CYCLE TIME
-        rospy.sleep(0)
+        rate.sleep()
 
 
 
@@ -113,7 +112,6 @@ def callback_update_odometry(data):
 
 def callback_update_state(data):
     state_dict = json.loads(data.data) # Creates a dictionary object from the JSON string received from the state topic
-    print(state_dict['light_sensors'])
     line_center = state_dict['light_sensors'][1]
     line_right = state_dict['light_sensors'][2]
     line_left = state_dict['light_sensors'][3]
