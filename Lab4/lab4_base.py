@@ -117,7 +117,6 @@ def init(args):
     publisher_render = rospy.Publisher('/%s/render_sim' % g_namespace, Empty, queue_size=10) 
     
     rospy.sleep(1)
-    
     #TODO: Set up your initial odometry pose (pose2d_sparki_odometry) as a new Pose2D message object
     pose2d_sparki_odometry = Pose2D()
     pose2d_sparki_odometry.x, pose2d_sparki_odometry.y, pose2d_sparki_odometry.theta = args.startingpose[0], args.startingpose[1], args.startingpose[2]
@@ -130,7 +129,10 @@ def init(args):
 def callback_update_odometry(data):
     # Receives geometry_msgs/Pose2D message
     global pose2d_sparki_odometry
+    #print(data)
     #TODO: Copy this data into your local odometry variable
+    pose2d_sparki_odometry = (data.x, data.y, data.theta)
+    print(pose2d_sparki_odometry)
 
 def callback_update_state(data):
     global line_center, line_right, line_left
@@ -143,6 +145,7 @@ def callback_update_state(data):
 def convert_ultrasonic_to_robot_coords(x_us):
     #TODO: Using US sensor reading and servo angle, return value in robot-centric coordinates
     x_r, y_r = 0., 0.
+    
     return x_r, y_r
 
 def convert_robot_coords_to_world(x_r, y_r):
