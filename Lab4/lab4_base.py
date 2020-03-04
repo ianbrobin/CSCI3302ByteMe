@@ -15,6 +15,9 @@ MAP_SIZE_X = 1200 # Default map size in pixels
 MAP_SIZE_Y = 800 # Default map size in pixels
 SPARKI_SIZE_RADIUS = 0.08 # 0.08m radius == 6.29in diameter 
 SPARKI_ULTRASONIC_MAX_DIST = .75 # 0.75m max range for ultrasonic sensor
+line_center = 0
+line_right = 0
+line_left = 0
 
 # ***** SERVO POSITIONS ***** #
 SPARKI_SERVO_LEFT = 80
@@ -54,11 +57,11 @@ def main(args):
 
     while not rospy.is_shutdown():
         #TODO: Implement CYCLE TIME
-
+        
         #TODO: Implement line following code here
         #      To create a message for changing motor speed, use Float32MultiArray()
         #      (e.g., msg = Float32MultiArray()     msg.data = [1.0,1.0]      publisher.pub(msg))
-
+        
         #emptyArg = Empty
         publisher_render.publish()
 
@@ -91,15 +94,17 @@ def init(args):
     publisher_ping = rospy.Publisher('/%s/ping_command' % g_namespace, Empty, queue_size=10)
     publisher_servo = rospy.Publisher('/%s/set_servo' % g_namespace, Int16, queue_size=10)
     publisher_render = rospy.Publisher('/%s/render_sim' % g_namespace, Empty, queue_size=10) 
-
+    
+    rospy.sleep(1)
+    
     #TODO: Set up your initial odometry pose (pose2d_sparki_odometry) as a new Pose2D message object
     pose2d_sparki_odometry = Pose2D()
     pose2d_sparki_odometry.x, pose2d_sparki_odometry.y, pose2d_sparki_odometry.theta = args.startingpose[0], args.startingpose[1], args.startingpose[2]
     
-    #TODO: Set sparki's servo to an angle pointing inward to the map (e.g., 45)
-    deg_45 = 45
-    publisher_servo.publish(deg_45)
+    #TODO: Set sparki's servo to an angle pointing inward to the map (e.g., 90)
+    publisher_servo.publish(SPARKI_SERVO_LEFT)
     publisher_render.publish()
+    print("Init ran...")
 
 def callback_update_odometry(data):
     # Receives geometry_msgs/Pose2D message
@@ -108,6 +113,10 @@ def callback_update_odometry(data):
 
 def callback_update_state(data):
     state_dict = json.loads(data.data) # Creates a dictionary object from the JSON string received from the state topic
+    print(state_dict['light_sensors'])
+    line_center = state_dict['light_sensors'][1]
+    line_right = state_dict['light_sensors'][2]
+    line_left = state_dict['light_sensors'][3]
     #TODO: Load data into your program's local state variables
 
 def convert_ultrasonic_to_robot_coords(x_us):
