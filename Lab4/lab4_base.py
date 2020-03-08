@@ -80,15 +80,18 @@ def main(args):
         elif line_center < IR_THRESHOLD and line_left > IR_THRESHOLD and line_right > IR_THRESHOLD:
             # Move forward
             motorSpeeds.data=[SPAKI_VELOCITY, SPAKI_VELOCITY]
-        
-        publisher_motor.publish(motorSpeeds)
-
         #TODID: Implement loop closure here
-        if line_center < IR_THRESHOLD and line_left < IR_THRESHOLD and line_right < IR_THRESHOLD:
+        elif line_center < IR_THRESHOLD and line_left < IR_THRESHOLD and line_right < IR_THRESHOLD:
             rospy.loginfo("Loop Closure Triggered")
+            motorSpeeds.data=[SPAKI_VELOCITY, SPAKI_VELOCITY]
             originPose = Pose2D(0, 0, 0)
             publisher_odom.publish(originPose)
             pose2d_sparki_odometry = originPose
+
+
+        publisher_motor.publish(motorSpeeds)
+
+
 
 
         if(cycleCounter - lastPingCycle == PING_CYCLE_INTERVAL):
