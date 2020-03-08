@@ -3,6 +3,7 @@ import json
 import copy
 import argparse
 import time
+import math
 from geometry_msgs.msg import Pose2D
 from std_msgs.msg import Float32MultiArray, Empty, String, Int16
 
@@ -44,50 +45,59 @@ subscriber_state = None
 # CONSTANTS 
 IR_THRESHOLD = 300 # IR sensor threshold for detecting black track. Change as necessary.
 CYCLE_HZ = 20 # In seconds
+PING_CYCLE_INTERVAL = 5 #execute a ping every 5 cycles (.25 seconds)
 
 def main(args):
     global publisher_motor, publisher_ping, publisher_servo, publisher_odom
     global IR_THRESHOLD, CYCLE_TIME
     global pose2d_sparki_odometry
-    global line_center, line_right, line_left
+    global line_center, line_right, line_left, ping_dist
 
     #TODO: Init your node to register it with the ROS core
     init(args)
     rate = rospy.Rate(CYCLE_HZ)
+    cycleCounter = 0
+    lastPingCycle = 0
     while not rospy.is_shutdown():
-        #TODO: Implement CYCLE TIME
+        #TODID: Implement CYCLE TIME
         
         #TODO: Implement line following code here
         #      To create a message for changing motor speed, use Float32MultiArray()
         #      (e.g., msg = Float32MultiArray()     msg.data = [1.0,1.0]      publisher.pub(msg))
         motorSpeeds = Float32MultiArray()
         #motorSpeeds.data=[1.0, 1.0]
-        print("sensor:                     %f, %f, %f" % (line_left, line_center, line_right))
+        #print("sensor:                     %f, %f, %f" % (line_left, line_center, line_right))
         if line_center < IR_THRESHOLD and line_left < IR_THRESHOLD and line_right < IR_THRESHOLD:
             # Reset Odometery
             # Move forward
-            print("Start line")
             motorSpeeds.data=[SPAKI_VELOCITY, SPAKI_VELOCITY]
         elif line_left < IR_THRESHOLD:
             # Turn Left
-            print("Left")
             motorSpeeds.data=[-1 * SPAKI_VELOCITY, SPAKI_VELOCITY]
         elif line_right < IR_THRESHOLD:
             # Turn right
-            print("right")
             motorSpeeds.data=[SPAKI_VELOCITY, -1 * SPAKI_VELOCITY]
         elif line_center < IR_THRESHOLD and line_left > IR_THRESHOLD and line_right > IR_THRESHOLD:
             # Move forward
-            print("forward")
             motorSpeeds.data=[SPAKI_VELOCITY, SPAKI_VELOCITY]
         
         publisher_motor.publish(motorSpeeds)
-        
-        
-        #TODO: Implement loop closure here
-        if False:
+
+        #TODID: Implement loop closure here
+        if line_center < IR_THRESHOLD and line_left < IR_THRESHOLD and line_right < IR_THRESHOLD:
             rospy.loginfo("Loop Closure Triggered")
+            originPose = Pose2D(0, 0, 0)
+            publisher_odom.publish(originPose)
+            pose2d_sparki_odometry = originPose
+
+
+        if(cycleCounter - lastPingCycle == PING_CYCLE_INTERVAL):
+            publisher_ping.publish()
+            lastPingCycle = cycleCounter
+
         publisher_render.publish()
+
+        cycleCounter += 1
         rate.sleep()
 
 
@@ -98,15 +108,17 @@ def init(args):
     global subscriber_odometry, subscriber_state
     global pose2d_sparki_odometry
     global line_center, line_right, line_left
+    global ping_dist
     line_center = 0
     line_right = 0
     line_left = 0
+    ping_dist = 0
     g_namespace = args.namespace
     rospy.init_node("sparki_mapper_%s" % g_namespace)
 
 
     
-    #TODO: Set up your publishers and subscribers
+    #TODID: Set up your publishers and subscribers
     subscriber_odometry = rospy.Subscriber("/%s/odometry" % g_namespace, Pose2D, callback_update_odometry)
     subscriber_state = rospy.Subscriber('/%s/state' % g_namespace, String, callback_update_state)
 
@@ -117,11 +129,11 @@ def init(args):
     publisher_render = rospy.Publisher('/%s/render_sim' % g_namespace, Empty, queue_size=10) 
     
     rospy.sleep(1)
-    #TODO: Set up your initial odometry pose (pose2d_sparki_odometry) as a new Pose2D message object
+    #TODID: Set up your initial odometry pose (pose2d_sparki_odometry) as a new Pose2D message object
     pose2d_sparki_odometry = Pose2D()
     pose2d_sparki_odometry.x, pose2d_sparki_odometry.y, pose2d_sparki_odometry.theta = args.startingpose[0], args.startingpose[1], args.startingpose[2]
     
-    #TODO: Set sparki's servo to an angle pointing inward to the map (e.g., 90)
+    #TODID: Set sparki's servo to an angle pointing inward to the map (e.g., 90)
     publisher_servo.publish(SPARKI_SERVO_LEFT)
     publisher_render.publish()
     print("Init ran...")
@@ -130,27 +142,60 @@ def callback_update_odometry(data):
     # Receives geometry_msgs/Pose2D message
     global pose2d_sparki_odometry
     #print(data)
-    #TODO: Copy this data into your local odometry variable
-    pose2d_sparki_odometry = (data.x, data.y, data.theta)
+    #TODID: Copy this data into your local odometry variable
+    pose2d_sparki_odometry = Pose2D(data.x, data.y, data.theta)
     print(pose2d_sparki_odometry)
 
 def callback_update_state(data):
-    global line_center, line_right, line_left
+    #TODID: Load data into your program's local state variables
+    global line_center, line_right, line_left, ping_dist
+    global pose2d_sparki_odometry
     state_dict = json.loads(data.data) # Creates a dictionary object from the JSON string received from the state topic
     line_center = state_dict['light_sensors'][2]
     line_right = state_dict['light_sensors'][3]
     line_left = state_dict['light_sensors'][1]
-    #TODO: Load data into your program's local state variables
 
-def convert_ultrasonic_to_robot_coords(x_us):
-    #TODO: Using US sensor reading and servo angle, return value in robot-centric coordinates
-    x_r, y_r = 0., 0.
+    
+    tempPing = state_dict.get('ping', -1)
+    if(tempPing != -1):
+        #copy variables to make sure they are not updated mid-process
+        tmpPose = Pose2D(pose2d_sparki_odometry.x, pose2d_sparki_odometry.y, pose2d_sparki_odometry.theta)
+        ping_dist = tempPing
+        (x_r, y_r) = convert_ultrasonic_to_robot_coords(tmpPose, ping_dist)
+        (x_w, y_w) = convert_robot_coords_to_world(tmpPose, x_r ,y_r)
+
+        
+        #print("REL: ", x_r, ", ", y_r)
+        print("ABS: ", x_w, ", ", y_w)
+        #print("ROB: ", tmpPose.x, ", ", tmpPose.y)
+    else:
+        ping_dist = -1
+        
+
+def convert_ultrasonic_to_robot_coords(robotPose, x_us):
+    #TODID: Using US sensor reading and servo angle, return value in robot-centric coordinates
+    global SPARKI_SERVO_LEFT
+    x_r, y_r = 0,0
+    tmpThetaRad = (robotPose.theta * 180) / 3.14159    
+
+    x_r = x_us * math.sin(tmpThetaRad)      #straight ahead
+    y_r = x_us * math.cos(tmpThetaRad)      #orthogonal
     
     return x_r, y_r
 
-def convert_robot_coords_to_world(x_r, y_r):
-    #TODO: Using odometry, convert robot-centric coordinates into world coordinates
+def convert_robot_coords_to_world(robotPose, x_r, y_r):
+    #TODID: Using odometry, convert robot-centric coordinates into world coordinates
     x_w, y_w = 0., 0.
+    tmpThetaRad = (robotPose.theta * 180) / 3.14159
+
+
+    #get world position of object based on robot world position and object relative position
+    #robot coordinate frame is orthogonal to world coordindate frame
+    #   so cross product and dot product functions are reversed
+    
+    x_w = robotPose.x + x_r * math.cos(robotPose.theta) + (y_r * math.sin(robotPose.theta))
+    y_w = robotPose.y + x_r * math.sin(robotPose.theta) + (y_r * math.cos(robotPose.theta) * -1)
+
 
     return x_w, y_w
 
@@ -176,11 +221,11 @@ def cost(cell_index_from, cell_index_to):
     return 0
 
 if __name__ == "__main__":
-    default_x, default_y = 800 * MAP_RESOLUTION, 656 * MAP_RESOLUTION
+    default_x, default_y, default_theta = 0.0, 0.0, 0.0
 
     parser = argparse.ArgumentParser(description="Sparki Simulation Environment")
     parser.add_argument('-n','--namespace', type=str, nargs='?', default='sparki', help='Prepended string for all topics')
-    parser.add_argument('-p','--startingpose', nargs=3, default=[default_x, default_y, 0.], help='Starting x, y, theta of Sparki in world coords')
+    parser.add_argument('-p','--startingpose', nargs=3, default=[default_x, default_y, default_theta], help='Starting x, y, theta of Sparki in world coords')
     args = parser.parse_args()
 
     main(args)
