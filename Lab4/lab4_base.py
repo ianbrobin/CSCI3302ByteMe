@@ -41,9 +41,14 @@ pose2d_sparki_odometry = None #Pose2D message object, contains x,y,theta members
 #TODO: Track IR sensor readings (there are five readings in the array: we've been using indices 1,2,3 for left/center/right)
 #TODO: Create data structure to hold map representation
 
-g_tk_map_resolution = 400
-g_tk_map_width = int(MAP_SIZE_X * MAP_RESOLUTION * g_tk_map_resolution)
-g_tk_map_height = int(MAP_SIZE_Y * MAP_RESOLUTION * g_tk_map_resolution)
+isStarting = True
+originPose = Pose2D(0, 0, 0)
+
+
+g_tk_map_resolution = 30
+g_tk_map_render_multiplier = 20
+g_tk_map_width = int(MAP_SIZE_X * MAP_RESOLUTION * g_tk_map_resolution * g_tk_map_render_multiplier)
+g_tk_map_height = int(MAP_SIZE_Y * MAP_RESOLUTION * g_tk_map_resolution * g_tk_map_render_multiplier)
 g_tk_map = np.zeros([g_tk_map_height, g_tk_map_width])
 g_tk_window = None
 g_tk_label = None
@@ -67,12 +72,14 @@ def main(args):
     global IR_THRESHOLD, CYCLE_TIME
     global pose2d_sparki_odometry
     global line_center, line_right, line_left, ping_dist
+    global isStarting, originPose
 
     #TODO: Init your node to register it with the ROS core
     init(args)
     rate = rospy.Rate(CYCLE_HZ)
     cycleCounter = 0
     lastPingCycle = 0
+
     while not rospy.is_shutdown():
         #TODID: Implement CYCLE TIME
         
@@ -82,14 +89,17 @@ def main(args):
         motorSpeeds = Float32MultiArray()
         #motorSpeeds.data=[1.0, 1.0]
         #print("sensor:                     %f, %f, %f" % (line_left, line_center, line_right))
+        if isStarting and originPose.x != 0 and (line_center > IR_THRESHOLD or line_left > IR_THRESHOLD or line_right > IR_THRESHOLD):
+            isStarting = False
+
         if line_center < IR_THRESHOLD and line_left < IR_THRESHOLD and line_right < IR_THRESHOLD:
             # Reset Odometery
             # Move forward
-            motorSpeeds.data=[SPAKI_VELOCITY, SPAKI_VELOCITY]
             rospy.loginfo("Loop Closure Triggered")
-            originPose = Pose2D(0, 0, 0)
-            publisher_odom.publish(originPose)
-            pose2d_sparki_odometry = originPose
+            crrntPose = copy.copy(originPose)
+            publisher_odom.publish(crrntPose)
+            pose2d_sparki_odometry = crrntPose
+            motorSpeeds.data=[SPAKI_VELOCITY, SPAKI_VELOCITY]
         elif line_left < IR_THRESHOLD:
             # Turn Left
             motorSpeeds.data=[-1 * SPAKI_VELOCITY, SPAKI_VELOCITY]
@@ -99,10 +109,12 @@ def main(args):
         elif line_center < IR_THRESHOLD and line_left > IR_THRESHOLD and line_right > IR_THRESHOLD:
             # Move forward
             motorSpeeds.data=[SPAKI_VELOCITY, SPAKI_VELOCITY]
+        else:
+            #forward
+            motorSpeeds.data=[SPAKI_VELOCITY, SPAKI_VELOCITY]
 
 
         publisher_motor.publish(motorSpeeds)
-
 
 
 
@@ -165,9 +177,13 @@ def init(args):
 def callback_update_odometry(data):
     # Receives geometry_msgs/Pose2D message
     global pose2d_sparki_odometry
+    global isStarting, originPose
     #print(data)
     #TODID: Copy this data into your local odometry variable
     pose2d_sparki_odometry = Pose2D(data.x, data.y, data.theta)
+    if(isStarting):
+        originPose = copy.copy(data)
+
     #print(pose2d_sparki_odometry)
 
 def callback_update_state(data):
@@ -185,9 +201,9 @@ def callback_update_state(data):
         #copy variables to make sure they are not updated mid-process
         tmpPose = Pose2D(pose2d_sparki_odometry.x, pose2d_sparki_odometry.y, pose2d_sparki_odometry.theta)
         ping_dist = tempPing
-        (x_r, y_r) = convert_ultrasonic_to_robot_coords(tmpPose, ping_dist)
-        (x_w, y_w) = convert_robot_coords_to_world(tmpPose, x_r, y_r)
-        #(x_w, y_w) = convert_ultrasonic_to_world(tmpPose, ping_dist)
+        #(x_r, y_r) = convert_ultrasonic_to_robot_coords(tmpPose, ping_dist)
+        #(x_w, y_w) = convert_robot_coords_to_world(tmpPose, x_r, y_r)
+        (x_w, y_w) = convert_ultrasonic_to_world(tmpPose, ping_dist)
 
         #print("REL: ", x_r, ", ", y_r)
         #print("ABS: ", x_w, ", ", y_w)
@@ -240,21 +256,25 @@ def populate_map_from_ping(x_ping, y_ping):
     global g_tk_map_width, g_tk_map_height, g_tk_map_resolution, g_tk_map
 
     #TODID: Given world coordinates of an object detected via ping, fill in the corresponding part of the map
-    pxlX = int(x_ping * g_tk_map_resolution)
-    pxlY = g_tk_map_height - int(y_ping * g_tk_map_resolution)
-    g_tk_map[pxlY, pxlX] = 255
+
+    for x in range(int(g_tk_map_render_multiplier / 2) * -1, int(g_tk_map_render_multiplier / 2) + 1):
+        for y in range(int(g_tk_map_render_multiplier / 2) * -1, int(g_tk_map_render_multiplier / 2) + 1):
+            pxlX = int(x_ping * g_tk_map_resolution * g_tk_map_render_multiplier + x)
+            pxlY = g_tk_map_height - int(y_ping * g_tk_map_resolution * g_tk_map_render_multiplier + y)
+            g_tk_map[pxlY, pxlX] = 255
 
 
 def display_map():
     global pose2d_sparki_odometry
     global g_tk_window, g_tk_canvas
+    global g_tk_map_render_multiplier
     global g_tk_map_width, g_tk_map_height, g_tk_map_resolution, g_tk_map
 
-    robotX = int(pose2d_sparki_odometry.x * g_tk_map_resolution)
-    robotY = g_tk_map_height - int(pose2d_sparki_odometry.y * g_tk_map_resolution)
+    robotX = int(pose2d_sparki_odometry.x * g_tk_map_resolution * g_tk_map_render_multiplier)
+    robotY = g_tk_map_height - int(pose2d_sparki_odometry.y * g_tk_map_resolution * g_tk_map_render_multiplier)
     img = Image.fromarray(g_tk_map).convert('RGB')
 
-    robotRadius = int(g_tk_map_resolution / 100) + 1
+    robotRadius = (int(g_tk_map_resolution / 100) + 1) * g_tk_map_render_multiplier
     if(robotX > robotRadius and robotY > robotRadius):
         for x in range(robotX - robotRadius, robotX + robotRadius + 1):
             for y in range(robotY - robotRadius, robotY + robotRadius + 1):
