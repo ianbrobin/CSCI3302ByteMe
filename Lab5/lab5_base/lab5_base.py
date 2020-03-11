@@ -136,11 +136,11 @@ def get_travel_cost(vertex_source, vertex_dest):
   dest_barrier_bool = g_WORLD_MAP[vertex_dest]
 
   #Actual if statements and evualuation
-  if(source_barrier_bool == 1 || dest_barrier_bool == 1 ):
+  if(source_barrier_bool == 1 or dest_barrier_bool == 1 ):
       return 1000
-  elif(source_i < 0 || source_i > g_NUM_X_CELLS):
+  elif(source_i < 0 or source_i > g_NUM_X_CELLS):
       return 1000
-  elif(source_j < 0 || source_j > g_NUM_Y_CELLS):
+  elif(source_j < 0 or source_j > g_NUM_Y_CELLS):
       return 1000
   else:
       return 1
@@ -186,7 +186,7 @@ def run_dijkstra(source_vertex):
             heappush(Q_cost, (neighboor, cost + curCost))
             prev[neighboor] = curInd
             dist[neighboor] = alt
-    
+
   # Return results of algorithm run
   return prev
 
