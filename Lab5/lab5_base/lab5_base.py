@@ -136,11 +136,11 @@ def get_travel_cost(vertex_source, vertex_dest):
   dest_barrier_bool = g_WORLD_MAP[vertex_dest]
 
   #Actual if statements and evualuation
-  if(source_barrier_bool == 1 || dest_barrier_bool == 1 ):
+  if(source_barrier_bool == 1 or dest_barrier_bool == 1 ):
       return 1000
-  elif(source_i < 0 || source_i > g_NUM_X_CELLS):
+  elif(source_i < 0 or source_i > g_NUM_X_CELLS):
       return 1000
-  elif(source_j < 0 || source_j > g_NUM_Y_CELLS):
+  elif(source_j < 0 or source_j > g_NUM_Y_CELLS):
       return 1000
   else:
       return 1
@@ -230,23 +230,20 @@ def render_map(map_array):
     Make sure to display your map so that I,J coordinate (0,0) is in the bottom left.
     (To do this, you'll probably want to iterate from row 'J-1' to '0')
   '''
-
-  flipMap = np.flipud(map_array)
   rows = []
-  # For each row...
-  for i in range(g_NUM_Y_CELLS):
-    row = []
-    # For each column...
-    for j in range(g_NUM_X_CELLS):
-      print((i * g_NUM_Y_CELLS) + j)
-      row.append(flipMap[(i * g_NUM_Y_CELLS) + j])
-    rows.append(row)
+  row = []
+  for i in range(len(map) - 1, -1, -1):
+    if map[i] == 1:
+      row.append('[ ]')
+    else:
+      row.append(" . ")
+    if i % g_NUM_Y_CELLS == 0:
+      rows.append(row)
+      row = []
 
-  print(rows)
-  # With new list of lists, print each list in order but reversed
   for row in rows:
-    for index in range(g_NUM_X_CELLS - 1, -1, -1):
-      print(row[index])
+    for i in range(len(row)-1, -1, -1):
+      print(row[i], end='')
     print('\n')
   pass
 
@@ -258,10 +255,10 @@ def part_1():
   # TODO: Initialize a grid map to use for your test -- you may use create_test_map for this, or manually set one up with obstacles
   testMap = create_test_map(map)
 
-  #print(g_NUM_X_CELLS)
+  print(g_NUM_X_CELLS)
 
   # Use render_map to render your initialized obstacle map
-  #render_map(testMap)
+  render_map(testMap)
 
   # TODO: Find a path from the (I,J) coordinate pair in g_src_coordinates to the one in g_dest_coordinates using run_dijkstra and reconstruct_path
 
