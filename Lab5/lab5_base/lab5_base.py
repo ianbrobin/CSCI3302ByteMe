@@ -202,7 +202,19 @@ def reconstruct_path(prev, source_vertex, dest_vertex):
   final_path = []
 
   # TODO: Insert your code here
-
+  final_path.append(dest_vertex)
+  previous = prev[dest_vertex]
+  flag = True
+  while(flag):
+      if(previous == -1):
+          final_path = []
+          flag = False
+      elif(previous == source_vertex):
+          final_path.append(previous)
+          flag = False
+      else:
+          final_path.append(previous)
+          previous = prev[previous]
 
   return final_path
 
