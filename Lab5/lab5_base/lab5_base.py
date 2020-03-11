@@ -6,6 +6,7 @@ import copy
 import math
 import random
 import argparse
+import heapq
 from PIL import Image
 import numpy as np
 from pprint import pprint
@@ -140,7 +141,7 @@ def run_dijkstra(source_vertex):
   global g_NUM_X_CELLS, g_NUM_Y_CELLS
 
   # Array mapping vertex_index to distance of shortest path from vertex_index to source_vertex.
-  dist = [0] * g_NUM_X_CELLS * g_NUM_Y_CELLS
+  dist = [float('inf')] * g_NUM_X_CELLS * g_NUM_Y_CELLS
 
   # Queue for identifying which vertices are up to still be explored:
   # Will contain tuples of (vertex_index, cost), sorted such that the min cost is first to be extracted (explore cheapest/most promising vertices first)
@@ -150,7 +151,23 @@ def run_dijkstra(source_vertex):
   prev = [-1] * g_NUM_X_CELLS*g_NUM_Y_CELLS
 
   # Insert your Dijkstra's code here. Don't forget to initialize Q_cost properly!
-
+  heappush(Q_cost, (source_vertex, 0))
+  dist[source_vertex] = 0
+  while len(Q_cost) != 0:
+    curInd, curCost = heappop(Q_cost)
+    left = curInd - 1
+    right = curInd + 1
+    top = curInd + g_NUM_X_CELLS
+    bottom = curInd - g_NUM_X_CELLS
+    neighboors = [left, right, top, bottom]
+    for neighboor in neighboors:
+        cost = get_travel_cost(curInd, neighboor)
+        alt = cost + curCost
+        if cost < 1000 and alt < dist[neighboor]:
+            heappush(Q_cost, (neighboor, cost + curCost))
+            prev[neighboor] = curInd
+            dist[neighboor] = alt
+    
   # Return results of algorithm run
   return prev
 
