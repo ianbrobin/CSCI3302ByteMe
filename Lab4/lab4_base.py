@@ -291,16 +291,45 @@ def display_map():
 
 
 def ij_to_cell_index(i,j):
-    #TODO: Convert from i,j coordinates to a single integer that identifies a grid cell
-    return 0
+    global g_tk_map_width, g_tk_map_height
+
+    """
+    Given the matrix with (i, j) points:
+    (1, 1), (1, 2), (1, 3)
+    (2, 1), (2, 2), (2, 3)
+    (3, 1), (3, 2), (3, 3)
+    
+    we want cell indices like so:
+    1     2     3
+    4     5     6
+    7     8     9
+    """
+
+    # i = row, j = column in matrix
+    # Add 1 to both of them so that we are indexed starting at 1 instead of 0
+    i += 1
+    j += 1
+    cellIndex = (g_tk_map_width * (i - 1)) + j
+    return cellIndex
 
 def cell_index_to_ij(cell_index):
-    #TODO: Convert from cell_index to (i,j) coordinates
-    return 0, 0
+    global g_tk_map_width, g_tk_map_height
+    col = cell_index % g_tk_map_width  # Get the column of the cell index
+
+    # If it goes into our width perfectly, it's the furthest right column...
+    if col == 0:
+        col = g_tk_map_width
+
+    row = cell_index - col
+    row /= g_tk_map_width
+    rowFinal = row + 1
+
+    # Convert back to 0-indexed
+    return rowFinal - 1, col - 1
 
 
 def cost(cell_index_from, cell_index_to):
-    #TODO: Return cost of traversing from one cell to another
+    
     return 0
 
 if __name__ == "__main__":
