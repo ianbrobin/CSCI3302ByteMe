@@ -6,6 +6,7 @@ import copy
 import math
 import random
 import argparse
+import heapq
 from PIL import Image
 import numpy as np
 from pprint import pprint
@@ -124,8 +125,27 @@ def get_travel_cost(vertex_source, vertex_dest):
         vertex_dest corresponds to (i,j) coordinates outside the map
         vertex_source and vertex_dest are not adjacent to each other (i.e., more than 1 move away from each other)
   '''
+  #Variable Instantiation
+  source_ij = vertex_index_to_ij(vertex_source)
+  dest_ij = vertex_index_to_ij(vertex_dest)
+  source_i = source_ij[0]
+  source_j = source_ij[1]
+  dest_i = dest_ij[0]
+  dest_j = dest_ij[1]
+  source_barrier_bool = g_WORLD_MAP[vertex_source]
+  dest_barrier_bool = g_WORLD_MAP[vertex_dest]
 
-  return 100
+  #Actual if statements and evualuation
+  if(source_barrier_bool == 1 || dest_barrier_bool == 1 ):
+      return 1000
+  elif(source_i < 0 || source_i > g_NUM_X_CELLS):
+      return 1000
+  elif(source_j < 0 || source_j > g_NUM_Y_CELLS):
+      return 1000
+  else:
+      return 1
+
+
 
 
 def run_dijkstra(source_vertex):
@@ -140,7 +160,7 @@ def run_dijkstra(source_vertex):
   global g_NUM_X_CELLS, g_NUM_Y_CELLS
 
   # Array mapping vertex_index to distance of shortest path from vertex_index to source_vertex.
-  dist = [0] * g_NUM_X_CELLS * g_NUM_Y_CELLS
+  dist = [float('inf')] * g_NUM_X_CELLS * g_NUM_Y_CELLS
 
   # Queue for identifying which vertices are up to still be explored:
   # Will contain tuples of (vertex_index, cost), sorted such that the min cost is first to be extracted (explore cheapest/most promising vertices first)
@@ -150,7 +170,23 @@ def run_dijkstra(source_vertex):
   prev = [-1] * g_NUM_X_CELLS*g_NUM_Y_CELLS
 
   # Insert your Dijkstra's code here. Don't forget to initialize Q_cost properly!
-
+  heappush(Q_cost, (source_vertex, 0))
+  dist[source_vertex] = 0
+  while len(Q_cost) != 0:
+    curInd, curCost = heappop(Q_cost)
+    left = curInd - 1
+    right = curInd + 1
+    top = curInd + g_NUM_X_CELLS
+    bottom = curInd - g_NUM_X_CELLS
+    neighboors = [left, right, top, bottom]
+    for neighboor in neighboors:
+        cost = get_travel_cost(curInd, neighboor)
+        alt = cost + curCost
+        if cost < 1000 and alt < dist[neighboor]:
+            heappush(Q_cost, (neighboor, cost + curCost))
+            prev[neighboor] = curInd
+            dist[neighboor] = alt
+    
   # Return results of algorithm run
   return prev
 
