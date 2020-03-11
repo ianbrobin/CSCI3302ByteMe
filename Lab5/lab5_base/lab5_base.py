@@ -186,7 +186,7 @@ def run_dijkstra(source_vertex):
             heappush(Q_cost, (neighboor, cost + curCost))
             prev[neighboor] = curInd
             dist[neighboor] = alt
-    
+
   # Return results of algorithm run
   return prev
 
