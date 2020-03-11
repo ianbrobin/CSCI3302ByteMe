@@ -38,7 +38,7 @@ def create_test_map(map_array):
   new_map = copy.copy(map_array)
   # Add obstacles to up to sqrt(n) vertices of the map
   for i in range(int(math.sqrt(len(map_array)))):
-    random_cell = random.randint(0, num_cells)
+    random_cell = random.randint(0, num_cells - 1)
     new_map[random_cell] = 1
 
   return new_map
@@ -194,16 +194,38 @@ def render_map(map_array):
     Make sure to display your map so that I,J coordinate (0,0) is in the bottom left.
     (To do this, you'll probably want to iterate from row 'J-1' to '0')
   '''
+
+  flipMap = np.flipud(map_array)
+  rows = []
+  # For each row...
+  for i in range(g_NUM_Y_CELLS):
+    row = []
+    # For each column...
+    for j in range(g_NUM_X_CELLS):
+      print((i * g_NUM_Y_CELLS) + j)
+      row.append(flipMap[(i * g_NUM_Y_CELLS) + j])
+    rows.append(row)
+
+  print(rows)
+  # With new list of lists, print each list in order but reversed
+  for row in rows:
+    for index in range(g_NUM_X_CELLS - 1, -1, -1):
+      print(row[index])
+    print('\n')
   pass
 
 
 def part_1():
-  global g_WORLD_MAP
+  global g_WORLD_MAP, g_NUM_X_CELLS, g_NUM_Y_CELLS
 
+  map = [0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
   # TODO: Initialize a grid map to use for your test -- you may use create_test_map for this, or manually set one up with obstacles
+  testMap = create_test_map(map)
 
+  #print(g_NUM_X_CELLS)
 
   # Use render_map to render your initialized obstacle map
+  #render_map(testMap)
 
   # TODO: Find a path from the (I,J) coordinate pair in g_src_coordinates to the one in g_dest_coordinates using run_dijkstra and reconstruct_path
 
