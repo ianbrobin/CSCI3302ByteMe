@@ -232,8 +232,8 @@ def render_map(map_array):
   '''
   rows = []
   row = []
-  for i in range(len(map) - 1, -1, -1):
-    if map[i] == 1:
+  for i in range(len(map_array) - 1, -1, -1):
+    if map_array[i] == 1:
       row.append('[ ]')
     else:
       row.append(" . ")
@@ -251,11 +251,11 @@ def render_map(map_array):
 def part_1():
   global g_WORLD_MAP, g_NUM_X_CELLS, g_NUM_Y_CELLS
 
-  map = [0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  # Create random list of 0's that we will add obstacles to...
+  map = np.zeros(np.random.randint(3, 50))
+
   # TODO: Initialize a grid map to use for your test -- you may use create_test_map for this, or manually set one up with obstacles
   testMap = create_test_map(map)
-
-  print(g_NUM_X_CELLS)
 
   # Use render_map to render your initialized obstacle map
   render_map(testMap)
