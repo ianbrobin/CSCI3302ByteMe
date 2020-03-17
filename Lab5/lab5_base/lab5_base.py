@@ -288,7 +288,8 @@ def part_1():
   if(len(path)== 0):
       print("There is no path from source to destination")
   else:
-      print(path)
+      for n in path:
+          print(vertex_index_to_ij(n))
 
 def part_2(args):
   global g_dest_coordinates
