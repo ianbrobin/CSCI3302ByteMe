@@ -273,7 +273,7 @@ def part_1():
   render_map(testMap)
 
   # TODO: Find a path from the (I,J) coordinate pair in g_src_coordinates to the one in g_dest_coordinates using run_dijkstra and reconstruct_path
-
+  
   '''
   TODO-
     Display the final path in the following format:
