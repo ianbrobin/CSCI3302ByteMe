@@ -135,9 +135,9 @@ def get_travel_cost(vertex_source, vertex_dest):
   dest_i = dest_ij[0]
   dest_j = dest_ij[1]
 
-  if vertex_source >= len(g_WORLD_MAP):
+  if vertex_source >= len(g_WORLD_MAP) or vertex_source < 0:
     return 1000
-  elif vertex_dest >= len(g_WORLD_MAP):
+  elif vertex_dest >= len(g_WORLD_MAP) or vertex_dest < 0:
     return 1000
 
   source_barrier_bool = g_WORLD_MAP[vertex_source]
