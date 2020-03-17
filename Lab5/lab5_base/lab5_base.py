@@ -284,10 +284,12 @@ def part_1():
   source = ij_to_vertex_index(0,0)
   dest = ij_to_vertex_index(3,1)
   prev = run_dijkstra(source)
+  print(prev)
   path = reconstruct_path(prev, source, dest)
   if(len(path)== 0):
       print("There is no path from source to destination")
   else:
+      print(path)
       for n in path:
           print(vertex_index_to_ij(n))
 
