@@ -7,6 +7,7 @@ import math
 import random
 import argparse
 import heapq
+from heapq import *
 from PIL import Image
 import numpy as np
 from pprint import pprint
@@ -114,6 +115,7 @@ def xy_coordinates_to_ij_coordinates(x,y):
 # **********************************
 
 def get_travel_cost(vertex_source, vertex_dest):
+  global g_WORLD_MAP
   # Returns the cost of moving from vertex_source (int) to vertex_dest (int)
   # INSTRUCTIONS:
   '''
@@ -132,6 +134,12 @@ def get_travel_cost(vertex_source, vertex_dest):
   source_j = source_ij[1]
   dest_i = dest_ij[0]
   dest_j = dest_ij[1]
+
+  if vertex_source >= len(g_WORLD_MAP):
+    return 1000
+  elif vertex_dest >= len(g_WORLD_MAP):
+    return 1000
+
   source_barrier_bool = g_WORLD_MAP[vertex_source]
   dest_barrier_bool = g_WORLD_MAP[vertex_dest]
 
@@ -170,10 +178,10 @@ def run_dijkstra(source_vertex):
   prev = [-1] * g_NUM_X_CELLS*g_NUM_Y_CELLS
 
   # Insert your Dijkstra's code here. Don't forget to initialize Q_cost properly!
-  heapq.heappush(Q_cost, (source_vertex, 0))
+  heappush(Q_cost, (source_vertex, 0))
   dist[source_vertex] = 0
   while len(Q_cost) != 0:
-    curInd, curCost = heapq.heappop(Q_cost)
+    curInd, curCost = heappop(Q_cost)
     left = curInd - 1
     right = curInd + 1
     top = curInd + g_NUM_X_CELLS
@@ -183,7 +191,7 @@ def run_dijkstra(source_vertex):
         cost = get_travel_cost(curInd, neighboor)
         alt = cost + curCost
         if cost < 1000 and alt < dist[neighboor]:
-            heapq.heappush(Q_cost, (neighboor, cost + curCost))
+            heappush(Q_cost, (neighboor, cost + curCost))
             prev[neighboor] = curInd
             dist[neighboor] = alt
 
@@ -216,6 +224,7 @@ def reconstruct_path(prev, source_vertex, dest_vertex):
       else:
           final_path.append(previous)
           previous = prev[previous]
+
   return final_path
 
 
@@ -244,15 +253,21 @@ def render_map(map_array):
   '''
   rows = []
   row = []
+
+  # Go through map backward and create string lists of what we need to print each row
   for i in range(len(map_array) - 1, -1, -1):
+    # Obstacle
     if map_array[i] == 1:
       row.append('[ ]')
+    # Free space
     else:
       row.append(" . ")
+    # New Row
     if i % g_NUM_Y_CELLS == 0:
       rows.append(row)
       row = []
 
+  # Print each row backward
   for row in rows:
     for i in range(len(row)-1, -1, -1):
       print(row[i], end='')
@@ -264,34 +279,59 @@ def part_1():
   global g_WORLD_MAP, g_NUM_X_CELLS, g_NUM_Y_CELLS
 
   # Create random list of 0's that we will add obstacles to...
-  map = np.zeros(np.random.randint(3, 50))
+  #randIntX = np.random.randint(2, 6)
+  #randIntY = np.random.randint(2, 6)
+  sizeOfMap = g_NUM_X_CELLS * g_NUM_Y_CELLS
 
-  # TODO: Initialize a grid map to use for your test -- you may use create_test_map for this, or manually set one up with obstacles
+  map = np.zeros(sizeOfMap)
+
+  # TODID: Initialize a grid map to use for your test -- you may use create_test_map for this, or manually set one up with obstacles
   testMap = create_test_map(map)
 
   # Use render_map to render your initialized obstacle map
   render_map(testMap)
 
-  # TODO: Find a path from the (I,J) coordinate pair in g_src_coordinates to the one in g_dest_coordinates using run_dijkstra and reconstruct_path
-  
+  # TODID: Find a path from the (I,J) coordinate pair in g_src_coordinates to the one in g_dest_coordinates using run_dijkstra and reconstruct_path
+
+  # Get random starting vertex to test Dijkstra's code, ensure we don't start at an obstacle by using while loop
+  randSourceVertexIndex = np.random.randint(0, len(testMap))
+  while testMap[randSourceVertexIndex] != 0:
+    randSourceVertexIndex = np.random.randint(0, len(testMap))
+  randSourceIJIndex = vertex_index_to_ij(randSourceVertexIndex)
+
+  # Get random destination vertex to test Dijkstra's code, ensure we don't start at an obstacle by using while loop
+  randGoalVertexIndex = np.random.randint(0, len(testMap))
+  while testMap[randGoalVertexIndex] != 0:
+    randGoalVertexIndex = np.random.randint(0, len(testMap))
+  randGoalIJIndex = vertex_index_to_ij(randGoalVertexIndex)
+
+  # Run Dijkstra's on our randomly generated map and our starting source node
+  prevArray = run_dijkstra(randSourceVertexIndex)
+
+  # Reconstruct the path from our random source to our random destination
+  # Path takes in prevArray from dijkstra's, takes in vertex indices, returns list of vertex indices
+  path = reconstruct_path(prevArray, randSourceVertexIndex, randGoalVertexIndex)
+
   '''
-  TODO-
-    Display the final path in the following format:
-    Source: (0,0)
-    Goal: (3,1)
-    0 -> 1 -> 2 -> 6 -> 7
-  '''
-  source = ij_to_vertex_index(0,0)
-  dest = ij_to_vertex_index(3,1)
-  prev = run_dijkstra(source)
-  print(prev)
-  path = reconstruct_path(prev, source, dest)
-  if(len(path)== 0):
-      print("There is no path from source to destination")
+    TODID-
+      Display the final path in the following format:
+      Source: (0,0)
+      Goal: (3,1)
+      0 -> 1 -> 2 -> 6 -> 7
+    '''
+  print(f"Source: {randSourceIJIndex}")
+  print(f"Goal: {randGoalIJIndex}")
+
+  if len(path) == 0 or path is None:
+    print('No Path Found!')
   else:
-      print(path)
-      for n in path:
-          print(vertex_index_to_ij(n))
+    # Path is returned in reverse order so iterate through it backwards
+    for i in range(len(path) - 1, -1, -1):
+      if i == 0:
+        print(f"{path[i]}")
+      else:
+        print(f"{path[i]} -> ", end="")
+
 
 def part_2(args):
   global g_dest_coordinates
