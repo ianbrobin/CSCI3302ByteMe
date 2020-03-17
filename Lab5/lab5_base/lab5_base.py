@@ -170,10 +170,10 @@ def run_dijkstra(source_vertex):
   prev = [-1] * g_NUM_X_CELLS*g_NUM_Y_CELLS
 
   # Insert your Dijkstra's code here. Don't forget to initialize Q_cost properly!
-  heappush(Q_cost, (source_vertex, 0))
+  heapq.heappush(Q_cost, (source_vertex, 0))
   dist[source_vertex] = 0
   while len(Q_cost) != 0:
-    curInd, curCost = heappop(Q_cost)
+    curInd, curCost = heapq.heappop(Q_cost)
     left = curInd - 1
     right = curInd + 1
     top = curInd + g_NUM_X_CELLS
@@ -183,7 +183,7 @@ def run_dijkstra(source_vertex):
         cost = get_travel_cost(curInd, neighboor)
         alt = cost + curCost
         if cost < 1000 and alt < dist[neighboor]:
-            heappush(Q_cost, (neighboor, cost + curCost))
+            heapq.heappush(Q_cost, (neighboor, cost + curCost))
             prev[neighboor] = curInd
             dist[neighboor] = alt
 
@@ -209,13 +209,13 @@ def reconstruct_path(prev, source_vertex, dest_vertex):
       if(previous == -1):
           final_path = []
           flag = False
+          return []
       elif(previous == source_vertex):
           final_path.append(previous)
           flag = False
       else:
           final_path.append(previous)
           previous = prev[previous]
-
   return final_path
 
 
@@ -281,7 +281,14 @@ def part_1():
     Goal: (3,1)
     0 -> 1 -> 2 -> 6 -> 7
   '''
-
+  source = ij_to_vertex_index(0,0)
+  dest = ij_to_vertex_index(3,1)
+  prev = run_dijkstra(source)
+  path = reconstruct_path(prev, source, dest)
+  if(len(path)== 0):
+      print("There is no path from source to destination")
+  else:
+      print(path)
 
 def part_2(args):
   global g_dest_coordinates
