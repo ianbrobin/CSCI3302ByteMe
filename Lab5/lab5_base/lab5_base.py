@@ -337,6 +337,13 @@ def part_2(args):
   global g_dest_coordinates
   global g_src_coordinates
   global g_WORLD_MAP
+  global g_MAP_SIZE_X
+  global g_MAP_SIZE_Y
+  global g_MAP_RESOLUTION_X
+  global g_MAP_RESOLUTION_Y
+  global g_NUM_X_CELLS
+  global g_NUM_Y_CELLS
+  print(g_MAP_SIZE_X)
 
   g_src_coordinates = (args.src_coordinates[0], args.src_coordinates[1])
   g_dest_coordinates = (args.dest_coordinates[0], args.dest_coordinates[1])
@@ -344,6 +351,24 @@ def part_2(args):
   # pixel_grid has intensity values for all the pixels
   # You will have to convert it to the earlier 0 and 1 matrix yourself
   pixel_grid = _load_img_to_intensity_matrix(args.obstacles)
+  g_NUM_X_CELLS = int(g_MAP_SIZE_X // g_MAP_RESOLUTION_X) # Number of columns in the grid map
+  g_NUM_Y_CELLS = int(g_MAP_SIZE_Y // g_MAP_RESOLUTION_Y)
+  print(g_src_coordinates, g_dest_coordinates)
+
+  print(g_NUM_X_CELLS,g_NUM_Y_CELLS)
+
+  source = ((float(g_src_coordinates[0])/g_MAP_SIZE_X)*g_NUM_X_CELLS,(float(g_src_coordinates[1])/g_MAP_SIZE_Y)*g_NUM_Y_CELLS)
+  print(source)
+
+  obstacleMap = []
+  for n in pixel_grid:
+      for m in n:
+          if m>0:
+              obstacleMap.append(1)
+          else:
+              obstacleMap.append(0)
+
+
 
   '''
   TODO -
@@ -366,5 +391,5 @@ if __name__ == "__main__":
   args = parser.parse_args()
 
 
-  part_1()
-  # part_2(args)
+  #part_1()
+  part_2(args)
