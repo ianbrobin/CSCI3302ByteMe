@@ -343,22 +343,44 @@ def part_2(args):
   global g_MAP_RESOLUTION_Y
   global g_NUM_X_CELLS
   global g_NUM_Y_CELLS
-  print(g_MAP_SIZE_X)
 
   g_src_coordinates = (args.src_coordinates[0], args.src_coordinates[1])
   g_dest_coordinates = (args.dest_coordinates[0], args.dest_coordinates[1])
 
   # pixel_grid has intensity values for all the pixels
   # You will have to convert it to the earlier 0 and 1 matrix yourself
+  g_MAP_SIZE_X  = 1.8  # 1.8 meters
+  g_MAP_SIZE_Y = 1.2  # 1.2 meters
+  g_MAP_RESOLUTION_X = 0.1  # Each col represents 10cm
+  g_MAP_RESOLUTION_Y = 0.1  # Each row represents 10cm
   pixel_grid = _load_img_to_intensity_matrix(args.obstacles)
   g_NUM_X_CELLS = int(g_MAP_SIZE_X // g_MAP_RESOLUTION_X) # Number of columns in the grid map
   g_NUM_Y_CELLS = int(g_MAP_SIZE_Y // g_MAP_RESOLUTION_Y)
-  print(g_src_coordinates, g_dest_coordinates)
+  g_WORLD_MAP = [0] * g_NUM_Y_CELLS * g_NUM_X_CELLS
 
-  print(g_NUM_X_CELLS,g_NUM_Y_CELLS)
+  source = (round((float(g_src_coordinates[0])/g_MAP_SIZE_X)*g_NUM_X_CELLS),round((float(g_src_coordinates[1])/g_MAP_SIZE_Y)*g_NUM_Y_CELLS))
+  dest = (round((float(g_dest_coordinates[0]) / g_MAP_SIZE_X) * g_NUM_X_CELLS), round((float(g_dest_coordinates[1]) / g_MAP_SIZE_Y) * g_NUM_Y_CELLS))
 
-  source = ((float(g_src_coordinates[0])/g_MAP_SIZE_X)*g_NUM_X_CELLS,(float(g_src_coordinates[1])/g_MAP_SIZE_Y)*g_NUM_Y_CELLS)
-  print(source)
+  # Run Dijkstra's on our randomly generated map and our starting source node
+  prevArray = run_dijkstra(ij_to_vertex_index(source[0], source[1]), pixel_grid)
+
+  # Reconstruct the path from our random source to our random destination
+  # Path takes in prevArray from dijkstra's, takes in vertex indices, returns list of vertex indices
+  path = reconstruct_path(prevArray, ij_to_vertex_index(source[0], source[1]), ij_to_vertex_index(dest[0], dest[1]))
+
+  print(f"Source: {ij_to_vertex_index(source[0], source[1])}")
+  print(f"Goal: {ij_to_vertex_index(dest[0], dest[1])}")
+
+  if len(path) == 0 or path is None:
+    print('No Path Found!')
+  else:
+    # Path is returned in reverse order so iterate through it backwards
+    for i in range(len(path) - 1, -1, -1):
+      if i == 0:
+        print(f"{path[i]}{vertex_index_to_ij(path[i])}")
+      else:
+        print(f"{path[i]}{vertex_index_to_ij(path[i])} -> ", end="")
+
 
   obstacleMap = []
   for n in pixel_grid:
