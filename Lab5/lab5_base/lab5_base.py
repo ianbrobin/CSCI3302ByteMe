@@ -354,13 +354,13 @@ def part_2(args):
   g_MAP_RESOLUTION_X = 0.1  # Each col represents 10cm
   g_MAP_RESOLUTION_Y = 0.1  # Each row represents 10cm
   pixel_grid = _load_img_to_intensity_matrix(args.obstacles)
-  g_NUM_X_CELLS = int(g_MAP_SIZE_X // g_MAP_RESOLUTION_X) # Number of columns in the grid map
-  g_NUM_Y_CELLS = int(g_MAP_SIZE_Y // g_MAP_RESOLUTION_Y)
+  g_NUM_X_CELLS = 1200 # Number of columns in the grid map
+  g_NUM_Y_CELLS = 800
   g_WORLD_MAP = [0] * g_NUM_Y_CELLS * g_NUM_X_CELLS
 
   source = (round((float(g_src_coordinates[0])/g_MAP_SIZE_X)*g_NUM_X_CELLS),round((float(g_src_coordinates[1])/g_MAP_SIZE_Y)*g_NUM_Y_CELLS))
   dest = (round((float(g_dest_coordinates[0]) / g_MAP_SIZE_X) * g_NUM_X_CELLS), round((float(g_dest_coordinates[1]) / g_MAP_SIZE_Y) * g_NUM_Y_CELLS))
-
+  print(g_NUM_X_CELLS,g_NUM_Y_CELLS)
 
   # Run Dijkstra's on our randomly generated map and our starting source node
   obstacleMap = []
@@ -391,10 +391,14 @@ def part_2(args):
 
   img = Image.open(args.obstacles)
   draw = ImageDraw.Draw(img)
-  start = vertex_index_to_ij(path[i])
+  start = vertex_index_to_ij(path[0])
   for n in path:
-      draw.line((start,vertex_index_to_ij(path[i])),width=1)
-      start = vertex_index_to_ij(path[i])
+      line = []
+      line.append(start)
+      line.append(vertex_index_to_ij(n))
+      draw.line(line,fill=255,width=5)
+      start = vertex_index_to_ij(n)
+  img.show()
 
 
 
