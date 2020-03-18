@@ -108,7 +108,7 @@ def xy_coordinates_to_ij_coordinates(x,y):
   returns (X, Y) coordinates in meters at the center of grid cell (i,j)
   '''
   global g_MAP_RESOLUTION_X, g_MAP_RESOLUTION_Y
-  return int(i // g_MAP_RESOLUTION_X), int(j // g_MAP_RESOLUTION_Y)
+  return int(x // g_MAP_RESOLUTION_X), int(y // g_MAP_RESOLUTION_Y)
 
 # **********************************
 # *      Core Dijkstra Functions   *
