@@ -344,8 +344,8 @@ def part_2(args):
   global g_NUM_X_CELLS
   global g_NUM_Y_CELLS
 
-  g_src_coordinates = (args.src_coordinates[0], args.src_coordinates[1])
-  g_dest_coordinates = (args.dest_coordinates[0], args.dest_coordinates[1])
+  g_src_coordinates = (float(args.src_coordinates[0]), float(args.src_coordinates[1]))
+  g_dest_coordinates = (float(args.dest_coordinates[0]), float(args.dest_coordinates[1]))
 
   # pixel_grid has intensity values for all the pixels
   # You will have to convert it to the earlier 0 and 1 matrix yourself
