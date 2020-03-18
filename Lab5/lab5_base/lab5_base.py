@@ -351,10 +351,10 @@ def part_2(args):
   # You will have to convert it to the earlier 0 and 1 matrix yourself
   g_MAP_SIZE_X  = 1.8  # 1.8 meters
   g_MAP_SIZE_Y = 1.2  # 1.2 meters
-  g_MAP_RESOLUTION_X = 0.1  # Each col represents 10cm
-  g_MAP_RESOLUTION_Y = 0.1  # Each row represents 10cm
+  g_MAP_RESOLUTION_X = 0.0015  # Each col represents 10cm
+  g_MAP_RESOLUTION_Y = 0.0015  # Each row represents 10cm
   pixel_grid = _load_img_to_intensity_matrix(args.obstacles)
-  g_NUM_X_CELLS = 1200 # Number of columns in the grid map
+  g_NUM_X_CELLS = 1200  # Number of columns in the grid map
   g_NUM_Y_CELLS = 800
   g_WORLD_MAP = [0] * g_NUM_Y_CELLS * g_NUM_X_CELLS
 
