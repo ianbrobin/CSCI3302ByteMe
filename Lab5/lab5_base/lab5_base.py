@@ -156,7 +156,7 @@ def get_travel_cost(vertex_source, vertex_dest):
 
 
 
-def run_dijkstra(source_vertex):
+def run_dijkstra(source_vertex, map):
   '''
   source_vertex: vertex index to find all paths back to
   returns: 'prev' array from a completed Dijkstra's algorithm run
@@ -190,7 +190,7 @@ def run_dijkstra(source_vertex):
     for neighboor in neighboors:
         cost = get_travel_cost(curInd, neighboor)
         alt = cost + curCost
-        if cost < 1000 and alt < dist[neighboor]:
+        if cost < 1000 and alt < dist[neighboor] and map[neighboor] != 1:
             heappush(Q_cost, (neighboor, cost + curCost))
             prev[neighboor] = curInd
             dist[neighboor] = alt
@@ -306,7 +306,7 @@ def part_1():
   randGoalIJIndex = vertex_index_to_ij(randGoalVertexIndex)
 
   # Run Dijkstra's on our randomly generated map and our starting source node
-  prevArray = run_dijkstra(randSourceVertexIndex)
+  prevArray = run_dijkstra(randSourceVertexIndex,testMap)
 
   # Reconstruct the path from our random source to our random destination
   # Path takes in prevArray from dijkstra's, takes in vertex indices, returns list of vertex indices
@@ -328,9 +328,9 @@ def part_1():
     # Path is returned in reverse order so iterate through it backwards
     for i in range(len(path) - 1, -1, -1):
       if i == 0:
-        print(f"{path[i]}")
+        print(f"{path[i]}{vertex_index_to_ij(path[i])}")
       else:
-        print(f"{path[i]} -> ", end="")
+        print(f"{path[i]}{vertex_index_to_ij(path[i])} -> ", end="")
 
 
 def part_2(args):
