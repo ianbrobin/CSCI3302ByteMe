@@ -11,6 +11,7 @@ from heapq import *
 from PIL import Image, ImageDraw
 import numpy as np
 from pprint import pprint
+from math import ceil
 
 g_CYCLE_TIME = .100
 
@@ -135,16 +136,23 @@ def get_travel_cost(vertex_source, vertex_dest):
   dest_i = dest_ij[0]
   dest_j = dest_ij[1]
 
+  # Ensure we are checking vertex indices that are in bound
   if vertex_source >= len(g_WORLD_MAP) or vertex_source < 0:
     return 1000
   elif vertex_dest >= len(g_WORLD_MAP) or vertex_dest < 0:
+    return 1000
+
+  # Ensure we aren't going "off the sides" of the map to create shortcuts by ensuring there's not more than a difference of 1
+  if abs(source_i - dest_i) > 1:
+    return 1000
+  if abs(source_j - dest_j) > 1:
     return 1000
 
   source_barrier_bool = g_WORLD_MAP[vertex_source]
   dest_barrier_bool = g_WORLD_MAP[vertex_dest]
 
   #Actual if statements and evualuation
-  if(source_barrier_bool == 1 or dest_barrier_bool == 1 ):
+  if(source_barrier_bool != 0 or dest_barrier_bool != 0):
       return 1000
   elif(source_i < 0 or source_i > g_NUM_X_CELLS):
       return 1000
@@ -152,8 +160,6 @@ def get_travel_cost(vertex_source, vertex_dest):
       return 1000
   else:
       return 1
-
-
 
 
 def run_dijkstra(source_vertex, map):
@@ -190,7 +196,7 @@ def run_dijkstra(source_vertex, map):
     for neighboor in neighboors:
         cost = get_travel_cost(curInd, neighboor)
         alt = cost + curCost
-        if cost < 1000 and alt < dist[neighboor] and map[neighboor] != 1:
+        if cost < 1000 and alt < dist[neighboor] and map[neighboor] == 0:
             heappush(Q_cost, (neighboor, cost + curCost))
             prev[neighboor] = curInd
             dist[neighboor] = alt
@@ -344,8 +350,8 @@ def part_2(args):
   global g_NUM_X_CELLS
   global g_NUM_Y_CELLS
 
-  g_src_coordinates = (args.src_coordinates[0], args.src_coordinates[1])
-  g_dest_coordinates = (args.dest_coordinates[0], args.dest_coordinates[1])
+  g_src_coordinates = (float(args.src_coordinates[0]), float(args.src_coordinates[1]))
+  g_dest_coordinates = (float(args.dest_coordinates[0]), float(args.dest_coordinates[1]))
 
   # pixel_grid has intensity values for all the pixels
   # You will have to convert it to the earlier 0 and 1 matrix yourself
@@ -370,12 +376,14 @@ def part_2(args):
               obstacleMap.append(1)
           else:
               obstacleMap.append(0)
+  g_WORLD_MAP = obstacleMap
   prevArray = run_dijkstra(ij_to_vertex_index(source[0], source[1]), obstacleMap)
 
   # Reconstruct the path from our random source to our random destination
   # Path takes in prevArray from dijkstra's, takes in vertex indices, returns list of vertex indices
   path = reconstruct_path(prevArray, ij_to_vertex_index(source[0], source[1]), ij_to_vertex_index(dest[0], dest[1]))
 
+  # Print Path Information
   print(f"Source: {ij_to_vertex_index(source[0], source[1])}")
   print(f"Goal: {ij_to_vertex_index(dest[0], dest[1])}")
 
@@ -389,42 +397,39 @@ def part_2(args):
       else:
         print(f"{path[i]}{vertex_index_to_ij(path[i])} -> ", end="")
 
+  # Convert path coordinates to image coordinates
+  imageCoordinatesOfPath = []
+  for step in path:
+    # Convert each path vertex index to i,j coords and then world coordinates to correspond with our image
+    i, j = vertex_index_to_ij(step)
+    x, y = ij_coordinates_to_xy_coordinates(i, j)
+
+    # Convert new world coordinates to image coordinates by figuring out where that world coordinate is on our map image
+    # round((meter position of point / total meters) * total cells) = proportion of image/map for that x/y (assuming equal size)
+    x2 = ceil((x / g_MAP_SIZE_X) * g_NUM_X_CELLS)
+    y2 = g_NUM_Y_CELLS - ceil((y / g_MAP_SIZE_Y) * g_NUM_Y_CELLS)
+    imageCoordinatesOfPath.append((x2, y2))
+
+  # Draw our path
   img = Image.open(args.obstacles)
   draw = ImageDraw.Draw(img)
-  start = vertex_index_to_ij(path[0])
-  for n in path:
+  print(f"(x, y) Image Coordinates of Source: {imageCoordinatesOfPath[-1]}")
+  print(f"(x, y) Image Coordinates of Destination: {imageCoordinatesOfPath[0]}")
+  start = imageCoordinatesOfPath[0]
+  for n in range(len(imageCoordinatesOfPath) - 1):
       line = []
       line.append(start)
-      line.append(vertex_index_to_ij(n))
-      draw.line(line,fill=255,width=5)
-      start = vertex_index_to_ij(n)
-  img.show()
+      line.append(imageCoordinatesOfPath[n])
+      draw.line(line, fill=255, width=3)
+      start = imageCoordinatesOfPath[n + 1]
 
-
-
-  img.save('answer.jpg')
-
-
-
-
-  '''
-  TODO -
-  1) Compute the g_WORLD_MAP -- depending on the resolution, you need to decide if your cell is an obstacle cell or a free cell.
-  2) Run Dijkstra's to get the plan
-  3) Show your plan/path on the image
-  Feel free to add more helper functions
-  '''
-
-  #### Your code goes here ####
-
-
-
+  img.save('answerC.jpg')
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description="Dijkstra on image file")
-  parser.add_argument('-s','--src_coordinates', nargs=2, default=[1.2, 0.2], help='Starting x, y location in world coords')
-  parser.add_argument('-g','--dest_coordinates', nargs=2, default=[0.3, 0.7], help='Goal x, y location in world coords')
-  parser.add_argument('-o','--obstacles', nargs='?', type=str, default='obstacles_test1.png', help='Black and white image showing the obstacle locations')
+  parser.add_argument('-s','--src_coordinates', nargs=2, default=[0.225, 0.6], help='Starting x, y location in world coords')
+  parser.add_argument('-g','--dest_coordinates', nargs=2, default=[1.35, 0.3], help='Goal x, y location in world coords')
+  parser.add_argument('-o','--obstacles', nargs='?', type=str, default='obstacles_test2.png', help='Black and white image showing the obstacle locations')
   args = parser.parse_args()
 
 
