@@ -358,9 +358,9 @@ def part_2(args):
   g_NUM_Y_CELLS = 800
   g_WORLD_MAP = [0] * g_NUM_Y_CELLS * g_NUM_X_CELLS
 
-  source = (round((float(g_src_coordinates[0])/g_MAP_SIZE_X)*g_NUM_X_CELLS),round((float(g_src_coordinates[1])/g_MAP_SIZE_Y)*g_NUM_Y_CELLS))
-  dest = (round((float(g_dest_coordinates[0]) / g_MAP_SIZE_X) * g_NUM_X_CELLS), round((float(g_dest_coordinates[1]) / g_MAP_SIZE_Y) * g_NUM_Y_CELLS))
-  print(g_NUM_X_CELLS,g_NUM_Y_CELLS)
+  # Convert from meters to ij coordinates using given function
+  source = xy_coordinates_to_ij_coordinates(g_src_coordinates[0], g_src_coordinates[1])
+  dest = xy_coordinates_to_ij_coordinates(g_dest_coordinates[0], g_dest_coordinates[1])
 
   # Run Dijkstra's on our randomly generated map and our starting source node
   obstacleMap = []
