@@ -8,7 +8,7 @@ import random
 import argparse
 import heapq
 from heapq import *
-from PIL import Image
+from PIL import Image, ImageDraw
 import numpy as np
 from pprint import pprint
 
@@ -361,8 +361,16 @@ def part_2(args):
   source = (round((float(g_src_coordinates[0])/g_MAP_SIZE_X)*g_NUM_X_CELLS),round((float(g_src_coordinates[1])/g_MAP_SIZE_Y)*g_NUM_Y_CELLS))
   dest = (round((float(g_dest_coordinates[0]) / g_MAP_SIZE_X) * g_NUM_X_CELLS), round((float(g_dest_coordinates[1]) / g_MAP_SIZE_Y) * g_NUM_Y_CELLS))
 
+
   # Run Dijkstra's on our randomly generated map and our starting source node
-  prevArray = run_dijkstra(ij_to_vertex_index(source[0], source[1]), pixel_grid)
+  obstacleMap = []
+  for n in pixel_grid:
+      for m in n:
+          if m>0:
+              obstacleMap.append(1)
+          else:
+              obstacleMap.append(0)
+  prevArray = run_dijkstra(ij_to_vertex_index(source[0], source[1]), obstacleMap)
 
   # Reconstruct the path from our random source to our random destination
   # Path takes in prevArray from dijkstra's, takes in vertex indices, returns list of vertex indices
@@ -381,14 +389,17 @@ def part_2(args):
       else:
         print(f"{path[i]}{vertex_index_to_ij(path[i])} -> ", end="")
 
+  img = Image.open(args.obstacles)
+  draw = ImageDraw.Draw(img)
+  start = vertex_index_to_ij(path[i])
+  for n in path:
+      draw.line((start,vertex_index_to_ij(path[i])),width=1)
+      start = vertex_index_to_ij(path[i])
 
-  obstacleMap = []
-  for n in pixel_grid:
-      for m in n:
-          if m>0:
-              obstacleMap.append(1)
-          else:
-              obstacleMap.append(0)
+
+
+  img.save('answer.jpg')
+
 
 
 
