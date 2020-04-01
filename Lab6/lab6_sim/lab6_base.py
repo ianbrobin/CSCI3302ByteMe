@@ -20,7 +20,7 @@ from math import ceil
 
 g_CYCLE_TIME = .100
 CYCLE_HZ = 20  # In seconds
-SPARKI_VELOCITY = 2
+SPARKI_VELOCITY = 3
 
 # Parameters you might need to use which will be set automatically
 MAP_SIZE_X = None
@@ -494,8 +494,12 @@ def part_2(args):
 
   rate = rospy.Rate(CYCLE_HZ)
 
-  currentWaypointIndex = 0
+  currentWaypointIndex = 1
   waypointCount = len(waypoints)
+  angleTolerance = .09
+  distTolerance = .001
+
+
   while currentWaypointIndex < waypointCount:
     targetWaypoint = waypoints[currentWaypointIndex]
     
@@ -504,22 +508,21 @@ def part_2(args):
 
 
     #spin to find bearing    
-    angleTolerance = (2 * 3.14159) * .05
     targetTheta = bearingError(pose2d_sparki_odometry, targetWaypoint) % (2 * 3.14159)
     adjCurrentTheta = pose2d_sparki_odometry.theta % (2 * 3.14159)
-
 
     print("TARGET THETA: ", targetTheta)
     print(pose2d_sparki_odometry.x, pose2d_sparki_odometry.y)
     print(targetWaypoint[0], targetWaypoint[1])
     
-
-    while adjCurrentTheta < targetTheta - angleTolerance and adjCurrentTheta > targetTheta + angleTolerance:
+    while abs(adjCurrentTheta - targetTheta) > angleTolerance:
       print(adjCurrentTheta)
+      scalar = max(abs(adjCurrentTheta - targetTheta) / (2 * 3.14159), .5)
+
       #if(adjCurrentTheta > targetTheta):
-      #  motorSpeeds.data = [-1 * SPARKI_VELOCITY, SPARKI_VELOCITY]
+      #  motorSpeeds.data = [-1 * SPARKI_VELOCITY * scalar, SPARKI_VELOCITY * scalar]
       #elif(adjCurrentTheta < targetTheta):
-      motorSpeeds.data = [SPARKI_VELOCITY, -1 * SPARKI_VELOCITY]
+      motorSpeeds.data = [SPARKI_VELOCITY * scalar, -1 * SPARKI_VELOCITY * scalar]
       publisher_motor.publish(motorSpeeds)
       publisher_render.publish()
       adjCurrentTheta = pose2d_sparki_odometry.theta % (2 * 3.14159)
@@ -530,12 +533,11 @@ def part_2(args):
     motorSpeeds.data = [0.0, 0.0]
     publisher_motor.publish(motorSpeeds)
     publisher_render.publish()
+    rate.sleep()
     
 
     #drive forwward to target
-    distTolerance = .001
     targetDist = posError(pose2d_sparki_odometry, targetWaypoint)
-    elapsedDist = 0.0
     lastTargetDist = 9999999999
 
     while targetDist > distTolerance:
@@ -564,28 +566,16 @@ def part_2(args):
   print(pose2d_sparki_odometry.x, pose2d_sparki_odometry.y)
   print(targetWaypoint[0], targetWaypoint[1])
 
-'''
-    sparki.moveForward(posError() * 100);
-    sparki.moveLeft(to_degrees(headingError() - bearingError()));
-    sparki.moveStop();
-    pose_x = dest_pose_x;
-    pose_y = dest_pose_y;
-    pose_theta = dest_pose_theta;
-'''
-
 
 
   
 
 
 def posError(currPose, destWaypoint):
-  return math.sqrt(math.pow(destWaypoint[0] - currPose.x, 2) + math.pow(destWaypoint[1] - currPose.y, 2))
+  return math.sqrt(math.pow(float(destWaypoint[0]) - float(currPose.x), 2) + math.pow(float(destWaypoint[1]) - float(currPose.y), 2))
 
 def bearingError(currPose, destWaypoint):
-  return math.atan((destWaypoint[1] - currPose.y) / (destWaypoint[0] - currPose.x))
-
-def headingError():
-  return dest_pose_theta - pose_theta
+  return math.atan((float(destWaypoint[1]) - float(currPose.y)) / (float(destWaypoint[0]) - float(currPose.x)))
 
 
 
