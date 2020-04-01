@@ -443,24 +443,12 @@ def part_2(args):
   # Path takes in prevArray from dijkstra's, takes in vertex indices, returns list of vertex indices
   path = reconstruct_path(prevArray, ij_to_vertex_index(source[0], source[1]), ij_to_vertex_index(dest[0], dest[1]))
 
-  # Print Path Information
-  print(f"Source: {ij_to_vertex_index(source[0], source[1])}")
-  print(f"Goal: {ij_to_vertex_index(dest[0], dest[1])}")
-
-  if len(path) == 0 or path is None:
-    print('No Path Found!')
-  else:
-    # Path is returned in reverse order so iterate through it backwards
-    for i in range(len(path) - 1, -1, -1):
-      if i == 0:
-        print(f"{path[i]}{vertex_index_to_ij(path[i])}")
-      else:
-        print(f"{path[i]}{vertex_index_to_ij(path[i])} -> ", end="")
+  waypoints = path_into_waypoints(path)
+  print()
 
   # Convert path coordinates to image coordinates
   imageCoordinatesOfPath = []
   for step in path:
-    print(obstacleMap[step])
     # Convert each path vertex index to i,j coords and then world coordinates to correspond with our image
     i, j = vertex_index_to_ij(step)
     x, y = ij_coordinates_to_xy_coordinates(i, j)
@@ -490,9 +478,9 @@ if __name__ == "__main__":
   parser = argparse.ArgumentParser(description="Dijkstra on image file")
   parser.add_argument('-s','--src_coordinates', nargs=2, default=[1.2, 0.2], help='Starting x, y location in world coords')
   parser.add_argument('-g','--dest_coordinates', nargs=2, default=[0.225, 0.975], help='Goal x, y location in world coords')
-  parser.add_argument('-o','--obstacles', nargs='?', type=str, default='obstacles_test2.png', help='Black and white image showing the obstacle locations')
+  parser.add_argument('-o','--obstacles', nargs='?', type=str, default='obstacles_test1.png', help='Black and white image showing the obstacle locations')
   args = parser.parse_args()
 
 
-  part_1()
-  #part_2(args)
+  #part_1()
+  part_2(args)
