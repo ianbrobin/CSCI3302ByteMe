@@ -281,6 +281,83 @@ def render_map(map_array):
   pass
 
 
+# Takes in the path returned by our path finding algorithm and converts it into intermediate waypoints
+def path_into_waypoints(vertexIndexPath, printResults=True):
+  if len(vertexIndexPath) == 0:
+    return None
+
+  path = []
+  for i in range(len(vertexIndexPath)):
+    path.append(vertex_index_to_ij(vertexIndexPath[i]))
+
+  # Begin with just our source
+  intermediateWaypoints = [path[-1]]
+  index = len(path) - 1
+
+  # Construct intermediate waypoints
+  while True:
+    currentPoint = path[index]
+    indexChanging = 0
+
+    # Ensure we're in bounds
+    if index - 1 >= 0:
+      index -= 1
+      nextPoint = path[index]
+
+      # Figure out which index we need to watch to see when we change direction
+      if currentPoint[0] == nextPoint[0]:
+        indexChanging = 0
+      elif currentPoint[1] == nextPoint[1]:
+        indexChanging = 1
+
+      # Cycle through our path until we find a change in direction
+      while True:
+        # Check in bounds
+        if index - 1 < 0:
+          break
+
+        index -= 1
+        previousPoint = path[index + 1]
+        nextPoint = path[index]
+
+        # If our original point and our next point have different numbers in the index we want to compare,
+        # Then we need to append the previous point
+        if currentPoint[indexChanging] != nextPoint[indexChanging]:
+          currentPoint = previousPoint
+          index += 1
+          intermediateWaypoints.append(previousPoint)
+          break
+
+    if index <= 0:
+      break
+
+  # Add our goal to the list
+  intermediateWaypoints.append(path[0])
+
+  # Remove any duplicates to be safe + convert to world coordinates
+  intermediateWaypoints2 = []
+  [intermediateWaypoints2.append(ij_coordinates_to_xy_coordinates(x[0], x[1])) for x in intermediateWaypoints if x not in intermediateWaypoints2]
+
+  if printResults:
+    print_waypoints(intermediateWaypoints2)
+
+  return intermediateWaypoints2
+
+# Takes in a list of waypoints and prints them nicely
+def print_waypoints(waypoints):
+  print(f"Source: ({waypoints[0][0]}, {waypoints[0][1]})")
+  print(f"Goal: ({waypoints[-1][0]}, {waypoints[-1][1]})")
+
+  if len(waypoints) == 0 or waypoints is None:
+    print('No Path Found!')
+  else:
+    # Path is returned in reverse order so iterate through it backwards
+    for i in range(len(waypoints)):
+      if i == len(waypoints) - 1:
+        print(f"({waypoints[i][0]}, {waypoints[i][1]})")
+      else:
+        print(f"({waypoints[i][0]}, {waypoints[i][1]}) -> ", end="")
+
 def part_1():
   global g_WORLD_MAP, g_NUM_X_CELLS, g_NUM_Y_CELLS
 
@@ -308,67 +385,18 @@ def part_1():
   randGoalIJIndex = vertex_index_to_ij(randGoalVertexIndex)
 
   # Run Dijkstra's on our randomly generated map and our starting source node
-  prevArray = run_dijkstra(randSourceVertexIndex,testMap)
+  prevArray = run_dijkstra(ij_to_vertex_index(3, 0) ,testMap)
 
   # Reconstruct the path from our random source to our random destination
   # Path takes in prevArray from dijkstra's, takes in vertex indices, returns list of vertex indices
   vertexIndexPath = reconstruct_path(prevArray, randSourceVertexIndex, randGoalVertexIndex)
 
-  path = []
-  for i in range(len(vertexIndexPath)):
-    path.append(vertex_index_to_ij(vertexIndexPath[i]))
-
-  intermediateWaypoints = []
-  flag = True
-  index = len(path) - 1
-  while flag:
-    currentPoint = path[index]
-    intermediateWaypoints.append(currentPoint)
-    indexChanging = 0
-    if index - 1 >= 0:
-      index -= 1
-      nextPoint = path[index]
-      if currentPoint[0] == nextPoint[0]:
-        indexChanging = 0
-      elif currentPoint[1] == nextPoint[1]:
-        indexChanging = 1
-
-      while True:
-        if index - 1 < 0:
-          intermediateWaypoints.append(currentPoint)
-          break
-        index -= 1
-        currentPoint = path[index]
-
-        if currentPoint[indexChanging] != nextPoint[indexChanging]:
-          intermediateWaypoints.append(currentPoint)
-          break
-        nextPoint = currentPoint
-
-    if index <= 0:
-      intermediateWaypoints.append(currentPoint)
-      break
-
-
-  '''
-    TODID-
-      Display the final path with Intermediate Waypoints:
-      Source: (0,0)
-      Goal: (3,1)
-      0 -> 1 -> 2 -> 6 -> 7
-    '''
-  print(f"Source: {randSourceIJIndex}")
-  print(f"Goal: {randGoalIJIndex}")
-
-  if len(path) == 0 or path is None:
+  # Convert path into waypoints
+  waypoints = path_into_waypoints(vertexIndexPath)
+  if waypoints is None:
+    print(f"Source: ({randSourceIJIndex[0]}, {randSourceIJIndex[1]})")
+    print(f"Goal: ({randGoalIJIndex[0]}, {randGoalIJIndex[1]})")
     print('No Path Found!')
-  else:
-    # Path is returned in reverse order so iterate through it backwards
-    for i in range(len(intermediateWaypoints) - 1, -1, -1):
-      if i == 0:
-        print(f"{intermediateWaypoints[i]}")
-      else:
-        print(f"{intermediateWaypoints[i]} -> ", end="")
 
 
 def part_2(args):
