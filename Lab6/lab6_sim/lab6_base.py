@@ -285,10 +285,7 @@ def part_1():
   global g_WORLD_MAP, g_NUM_X_CELLS, g_NUM_Y_CELLS
 
   # Create random list of 0's that we will add obstacles to...
-  #randIntX = np.random.randint(2, 6)
-  #randIntY = np.random.randint(2, 6)
   sizeOfMap = g_NUM_X_CELLS * g_NUM_Y_CELLS
-
   map = np.zeros(sizeOfMap)
 
   # TODID: Initialize a grid map to use for your test -- you may use create_test_map for this, or manually set one up with obstacles
@@ -298,7 +295,6 @@ def part_1():
   render_map(testMap)
 
   # TODID: Find a path from the (I,J) coordinate pair in g_src_coordinates to the one in g_dest_coordinates using run_dijkstra and reconstruct_path
-
   # Get random starting vertex to test Dijkstra's code, ensure we don't start at an obstacle by using while loop
   randSourceVertexIndex = np.random.randint(0, len(testMap))
   while testMap[randSourceVertexIndex] != 0:
@@ -316,11 +312,47 @@ def part_1():
 
   # Reconstruct the path from our random source to our random destination
   # Path takes in prevArray from dijkstra's, takes in vertex indices, returns list of vertex indices
-  path = reconstruct_path(prevArray, randSourceVertexIndex, randGoalVertexIndex)
+  vertexIndexPath = reconstruct_path(prevArray, randSourceVertexIndex, randGoalVertexIndex)
+
+  path = []
+  for i in range(len(vertexIndexPath)):
+    path.append(vertex_index_to_ij(vertexIndexPath[i]))
+
+  intermediateWaypoints = []
+  flag = True
+  index = len(path) - 1
+  while flag:
+    currentPoint = path[index]
+    intermediateWaypoints.append(currentPoint)
+    indexChanging = 0
+    if index - 1 >= 0:
+      index -= 1
+      nextPoint = path[index]
+      if currentPoint[0] == nextPoint[0]:
+        indexChanging = 0
+      elif currentPoint[1] == nextPoint[1]:
+        indexChanging = 1
+
+      while True:
+        if index - 1 < 0:
+          intermediateWaypoints.append(currentPoint)
+          break
+        index -= 1
+        currentPoint = path[index]
+
+        if currentPoint[indexChanging] != nextPoint[indexChanging]:
+          intermediateWaypoints.append(currentPoint)
+          break
+        nextPoint = currentPoint
+
+    if index <= 0:
+      intermediateWaypoints.append(currentPoint)
+      break
+
 
   '''
     TODID-
-      Display the final path in the following format:
+      Display the final path with Intermediate Waypoints:
       Source: (0,0)
       Goal: (3,1)
       0 -> 1 -> 2 -> 6 -> 7
@@ -332,11 +364,11 @@ def part_1():
     print('No Path Found!')
   else:
     # Path is returned in reverse order so iterate through it backwards
-    for i in range(len(path) - 1, -1, -1):
+    for i in range(len(intermediateWaypoints) - 1, -1, -1):
       if i == 0:
-        print(f"{path[i]}{vertex_index_to_ij(path[i])}")
+        print(f"{intermediateWaypoints[i]}")
       else:
-        print(f"{path[i]}{vertex_index_to_ij(path[i])} -> ", end="")
+        print(f"{intermediateWaypoints[i]} -> ", end="")
 
 
 def part_2(args):
@@ -434,5 +466,5 @@ if __name__ == "__main__":
   args = parser.parse_args()
 
 
-  #part_1()
-  part_2(args)
+  part_1()
+  #part_2(args)
