@@ -2,6 +2,11 @@
  IMPORTANT: Read through the code before beginning implementation!
  Your solution should fill in the various "TODO" items within this starter code.
 '''
+import sys
+import rospy
+from geometry_msgs.msg import Pose2D
+from std_msgs.msg import Float32MultiArray, Empty, String, Int16
+import json
 import copy
 import math
 import random
@@ -14,6 +19,8 @@ from pprint import pprint
 from math import ceil
 
 g_CYCLE_TIME = .100
+CYCLE_HZ = 20  # In seconds
+SPARKI_VELOCITY = 3
 
 # Parameters you might need to use which will be set automatically
 MAP_SIZE_X = None
@@ -409,6 +416,10 @@ def part_2(args):
   global g_MAP_RESOLUTION_Y
   global g_NUM_X_CELLS
   global g_NUM_Y_CELLS
+  global pose2d_sparki_odometry
+  global isStarting, originPose
+
+
 
   g_src_coordinates = (float(args.src_coordinates[0]), float(args.src_coordinates[1]))
   g_dest_coordinates = (float(args.dest_coordinates[0]), float(args.dest_coordinates[1]))
@@ -474,8 +485,182 @@ def part_2(args):
 
   img.save('answerD.jpg')
 
+
+
+  #DRIVE
+  initSimulator(args)
+
+  # TODID: Set up your publishers and subscribers
+
+  rate = rospy.Rate(CYCLE_HZ)
+
+  currentWaypointIndex = 0
+  waypointCount = len(waypoints)
+  while currentWaypointIndex < waypointCount:
+    targetWaypoint = waypoints[currentWaypointIndex]
+    
+    motorSpeeds = Float32MultiArray()
+
+
+
+    #spin to find bearing    
+    angleTolerance = (2 * 3.14159) * .1
+    targetTheta = bearingError(pose2d_sparki_odometry, targetWaypoint) % (2 * 3.14159)
+    adjCurrentTheta = pose2d_sparki_odometry.theta % (2 * 3.14159)
+
+
+    print(targetTheta)
+    print(pose2d_sparki_odometry.x, pose2d_sparki_odometry.y)
+    print(targetWaypoint[0], targetWaypoint[1])
+    
+
+    while adjCurrentTheta < targetTheta - angleTolerance and adjCurrentTheta > targetTheta + angleTolerance:
+      print(adjCurrentTheta)
+      if(adjCurrentTheta > targetTheta):
+        motorSpeeds.data = [-1 * SPARKI_VELOCITY, SPARKI_VELOCITY]
+      elif(adjCurrentTheta < targetTheta):
+        motorSpeeds.data = [SPARKI_VELOCITY, -1 * SPARKI_VELOCITY]
+      publisher_motor.publish(motorSpeeds)
+      publisher_render.publish()
+      adjCurrentTheta = pose2d_sparki_odometry.theta % (2 * 3.14159)
+      rate.sleep()
+
+
+    #stop when bearing acheived
+    motorSpeeds.data = [0.0, 0.0]
+    publisher_motor.publish(motorSpeeds)
+    publisher_render.publish()
+    
+
+    #drive forwward to target
+    distTolerance = .01
+    targetDist = posError(pose2d_sparki_odometry, targetWaypoint)
+    elapsedDist = 0.0
+    lastTargetDist = 9999999999
+
+    while targetDist > distTolerance:
+      if(targetDist > lastTargetDist):
+        break
+
+      motorSpeeds.data = [SPARKI_VELOCITY, SPARKI_VELOCITY]
+      publisher_motor.publish(motorSpeeds)
+      publisher_render.publish()
+      
+      lastTargetDist = targetDist
+      targetDist = posError(pose2d_sparki_odometry, targetWaypoint)
+      rate.sleep()
+
+
+    #stop at waypoint
+    motorSpeeds.data = [0.0, 0.0]
+    publisher_motor.publish(motorSpeeds)
+    publisher_render.publish()
+
+    #advance to next point
+    currentWaypointIndex = currentWaypointIndex + 1
+    rate.sleep()
+
+
+  print(pose2d_sparki_odometry.x, pose2d_sparki_odometry.y)
+  print(targetWaypoint[0], targetWaypoint[1])
+
+'''
+    sparki.moveForward(posError() * 100);
+    sparki.moveLeft(to_degrees(headingError() - bearingError()));
+    sparki.moveStop();
+    pose_x = dest_pose_x;
+    pose_y = dest_pose_y;
+    pose_theta = dest_pose_theta;
+'''
+
+
+
+  
+
+
+def posError(currPose, destWaypoint):
+  return math.sqrt(math.pow(destWaypoint[0] - currPose.x, 2) + math.pow(destWaypoint[1] - currPose.y, 2))
+
+def bearingError(currPose, destWaypoint):
+  return math.atan((destWaypoint[1] - currPose.y) / (destWaypoint[0] - currPose.x))
+
+def headingError():
+  return dest_pose_theta - pose_theta
+
+
+
+def initSimulator(args):
+  global g_namespace
+  global publisher_motor, publisher_ping, publisher_servo, publisher_odom, publisher_render
+  global subscriber_odometry, subscriber_state
+  global pose2d_sparki_odometry
+  global line_center, line_right, line_left
+  global ping_dist
+  global g_dest_coordinates
+  global g_src_coordinates
+  line_center = 0
+  line_right = 0
+  line_left = 0
+  ping_dist = 0
+  g_namespace = args.namespace
+  rospy.init_node("sparki_mapper_%s" % g_namespace)
+
+  subscriber_odometry = rospy.Subscriber("/%s/odometry" % g_namespace, Pose2D, callback_update_odometry)
+  #subscriber_state = rospy.Subscriber('/%s/state' % g_namespace, String, callback_update_state)
+
+  publisher_motor = rospy.Publisher('/%s/motor_command' % g_namespace, Float32MultiArray, queue_size=10)
+  publisher_odom = rospy.Publisher('/%s/set_odometry' % g_namespace, Pose2D, queue_size=10)
+  publisher_ping = rospy.Publisher('/%s/ping_command' % g_namespace, Empty, queue_size=10)
+  publisher_servo = rospy.Publisher('/%s/set_servo' % g_namespace, Int16, queue_size=10)
+  publisher_render = rospy.Publisher('/%s/render_sim' % g_namespace, Empty, queue_size=10)
+
+  rospy.sleep(1)
+  pose2d_sparki_odometry = Pose2D()
+  pose2d_sparki_odometry.x, pose2d_sparki_odometry.y, pose2d_sparki_odometry.theta = float(args.src_coordinates[0]), float(args.src_coordinates[1]), 0.0
+
+
+
+def callback_update_odometry(data):
+    # Receives geometry_msgs/Pose2D message
+    global pose2d_sparki_odometry
+    # print(data)
+    # TODID: Copy this data into your local odometry variable
+    pose2d_sparki_odometry = Pose2D(data.x, data.y, data.theta)
+
+    # print(pose2d_sparki_odometry)
+
+
+def callback_update_state(data):
+    # TODID: Load data into your program's local state variables
+    global line_center, line_right, line_left, ping_dist
+    global pose2d_sparki_odometry
+    state_dict = json.loads(data.data)  # Creates a dictionary object from the JSON string received from the state topic
+    line_center = state_dict['light_sensors'][2]
+    line_right = state_dict['light_sensors'][3]
+    line_left = state_dict['light_sensors'][1]
+
+    tempPing = state_dict.get('ping', -1)
+    if (tempPing != -1):
+        # copy variables to make sure they are not updated mid-process
+        tmpPose = Pose2D(pose2d_sparki_odometry.x, pose2d_sparki_odometry.y, pose2d_sparki_odometry.theta)
+        ping_dist = tempPing
+        # (x_r, y_r) = convert_ultrasonic_to_robot_coords(tmpPose, ping_dist)
+        # (x_w, y_w) = convert_robot_coords_to_world(tmpPose, x_r, y_r)
+        (x_w, y_w) = convert_ultrasonic_to_world(tmpPose, ping_dist)
+
+        # print("REL: ", x_r, ", ", y_r)
+        # print("ABS: ", x_w, ", ", y_w)
+        # print("ROB: ", tmpPose.x, ", ", tmpPose.y)
+
+        populate_map_from_ping(x_w, y_w)
+    else:
+        ping_dist = -1
+
+
+
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description="Dijkstra on image file")
+  parser.add_argument('-n','--namespace', type=str, nargs='?', default='sparki', help='Prepended string for all topics')
   parser.add_argument('-s','--src_coordinates', nargs=2, default=[0.225, 0.6], help='Starting x, y location in world coords')
   parser.add_argument('-g','--dest_coordinates', nargs=2, default=[1.35, 0.3], help='Goal x, y location in world coords')
   parser.add_argument('-o','--obstacles', nargs='?', type=str, default='obstacles_test1.png', help='Black and white image showing the obstacle locations')
