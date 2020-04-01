@@ -20,7 +20,7 @@ from math import ceil
 
 g_CYCLE_TIME = .100
 CYCLE_HZ = 20  # In seconds
-SPARKI_VELOCITY = 3
+SPARKI_VELOCITY = 2
 
 # Parameters you might need to use which will be set automatically
 MAP_SIZE_X = None
@@ -504,22 +504,22 @@ def part_2(args):
 
 
     #spin to find bearing    
-    angleTolerance = (2 * 3.14159) * .1
+    angleTolerance = (2 * 3.14159) * .05
     targetTheta = bearingError(pose2d_sparki_odometry, targetWaypoint) % (2 * 3.14159)
     adjCurrentTheta = pose2d_sparki_odometry.theta % (2 * 3.14159)
 
 
-    print(targetTheta)
+    print("TARGET THETA: ", targetTheta)
     print(pose2d_sparki_odometry.x, pose2d_sparki_odometry.y)
     print(targetWaypoint[0], targetWaypoint[1])
     
 
     while adjCurrentTheta < targetTheta - angleTolerance and adjCurrentTheta > targetTheta + angleTolerance:
       print(adjCurrentTheta)
-      if(adjCurrentTheta > targetTheta):
-        motorSpeeds.data = [-1 * SPARKI_VELOCITY, SPARKI_VELOCITY]
-      elif(adjCurrentTheta < targetTheta):
-        motorSpeeds.data = [SPARKI_VELOCITY, -1 * SPARKI_VELOCITY]
+      #if(adjCurrentTheta > targetTheta):
+      #  motorSpeeds.data = [-1 * SPARKI_VELOCITY, SPARKI_VELOCITY]
+      #elif(adjCurrentTheta < targetTheta):
+      motorSpeeds.data = [SPARKI_VELOCITY, -1 * SPARKI_VELOCITY]
       publisher_motor.publish(motorSpeeds)
       publisher_render.publish()
       adjCurrentTheta = pose2d_sparki_odometry.theta % (2 * 3.14159)
@@ -533,7 +533,7 @@ def part_2(args):
     
 
     #drive forwward to target
-    distTolerance = .01
+    distTolerance = .001
     targetDist = posError(pose2d_sparki_odometry, targetWaypoint)
     elapsedDist = 0.0
     lastTargetDist = 9999999999
