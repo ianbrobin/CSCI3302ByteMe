@@ -345,8 +345,8 @@ def path_into_waypoints(vertexIndexPath, printResults=True):
 
 # Takes in a list of waypoints and prints them nicely
 def print_waypoints(waypoints):
-  print(f"Source: ({waypoints[0][0]}, {waypoints[0][1]})")
-  print(f"Goal: ({waypoints[-1][0]}, {waypoints[-1][1]})")
+  print(f"Source: ({round(waypoints[0][0], 5)}, {round(waypoints[0][1], 5)})")
+  print(f"Goal: ({round(waypoints[-1][0], 5)}, {round(waypoints[-1][1], 5)})")
 
   if len(waypoints) == 0 or waypoints is None:
     print('No Path Found!')
@@ -354,9 +354,9 @@ def print_waypoints(waypoints):
     # Path is returned in reverse order so iterate through it backwards
     for i in range(len(waypoints)):
       if i == len(waypoints) - 1:
-        print(f"({waypoints[i][0]}, {waypoints[i][1]})")
+        print(f"({round(waypoints[i][0], 5)}, {round(waypoints[i][1], 5)})")
       else:
-        print(f"({waypoints[i][0]}, {waypoints[i][1]}) -> ", end="")
+        print(f"({round(waypoints[i][0], 5)}, {round(waypoints[i][1], 5)}) -> ", end="")
 
 def part_1():
   global g_WORLD_MAP, g_NUM_X_CELLS, g_NUM_Y_CELLS
@@ -472,12 +472,12 @@ def part_2(args):
       draw.line(line, fill=255, width=3)
       start = imageCoordinatesOfPath[n + 1]
 
-  img.save('answerC.jpg')
+  img.save('answerD.jpg')
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description="Dijkstra on image file")
-  parser.add_argument('-s','--src_coordinates', nargs=2, default=[1.2, 0.2], help='Starting x, y location in world coords')
-  parser.add_argument('-g','--dest_coordinates', nargs=2, default=[0.225, 0.975], help='Goal x, y location in world coords')
+  parser.add_argument('-s','--src_coordinates', nargs=2, default=[0.225, 0.6], help='Starting x, y location in world coords')
+  parser.add_argument('-g','--dest_coordinates', nargs=2, default=[1.35, 0.3], help='Goal x, y location in world coords')
   parser.add_argument('-o','--obstacles', nargs='?', type=str, default='obstacles_test1.png', help='Black and white image showing the obstacle locations')
   args = parser.parse_args()
 
