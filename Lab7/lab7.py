@@ -1,5 +1,6 @@
 import sys
 import rospy
+from geometry_msgs.msg import PoseStamped
 import argparse
 
 if __name__ == "__main__":
@@ -9,5 +10,10 @@ if __name__ == "__main__":
     parser.add_argument('-theta', type=float, nargs=1, default=1.0, help="Goal theta location")
     args = parser.parse_args()
 
-    print(args)
-    print(args.x)
+    publisher_goal = rospy.Publisher('/%s/move_base_simple/goal', PoseStamped, queue_size=10)
+    goalpose = PoseStamped()
+    goalpose.pose.position.x = args.x
+    goalpose.pose.position.y = args.y
+    goalpose.pose.position.z = args.theta
+    print(args.x,args.y,args.theta)
+    print(goalpose)
