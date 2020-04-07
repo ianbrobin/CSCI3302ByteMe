@@ -13,6 +13,7 @@ if __name__ == "__main__":
 
     publisher_goal = rospy.Publisher('/move_base_simple/goal', PoseStamped, queue_size=10)
     goalpose = PoseStamped()
+    goalpose.header.frame_id = 'map.pgm'
     goalpose.pose.position.x = args.x
     goalpose.pose.position.y = args.y
     goalpose.pose.orientation.w = args.theta
