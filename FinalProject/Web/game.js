@@ -4,6 +4,7 @@ let board = {};  // Board State
 let playerSymbol = 'X';  // What symbol the human will play with
 let simSymbol = 'O';
 let toMove = 'X';  // Whos turn it is
+let enabled = true;
 
 // Initialize each cell to null
 cells.forEach(function(cell, index) {
@@ -114,11 +115,13 @@ function checkWinnerHelper(symbols, cells) {
         // Check if the only symbol is the players...
         if (symbols.has(playerSymbol)) {
             highlightWinningCells(cells, 1);
+            enabled = false;
             return 1;
         }
         // Check if the only symbol is the robots
         else if (symbols.has(simSymbol)) {
             highlightWinningCells(cells, -1);
+            enabled = false;
             return -1;
         }
     }
@@ -204,6 +207,28 @@ function checkWinner() {
 
 }
 
+// Reset game!
+function resetGame() {
+    board = {};  // Board State
+    playerSymbol = 'X';  // What symbol the human will play with
+    simSymbol = 'O';
+    toMove = 'X';  // Whos turn it is
+    enabled = true;
+
+    // Initialize each cell to no move
+    cells.forEach(function(cell, index) {
+        board[cell] = '-';
+    });
+
+    // Render board
+    renderBoard();
+
+    // Reset all cell colors (since we highlight winning cells after a win)
+    for (const [key, val] of Object.entries(board)) {
+        document.getElementById(key).style.color = 'goldenrod';
+    }
+}
+
 
 // Input: cell is what cell we wish to make a move in (id of cell, unique identifier)
 // Input: player is the player (X or O) currently trying to make the move
@@ -213,6 +238,12 @@ function makeMove(cell, player) {
     // First check that cell exists on our board
     if (!cells.includes(cell)) {
         window.alert("Trying to make move in invalid cell " + cell.toString());
+    }
+
+    // If game has been won, we need to reset the board
+    if (!enabled) {
+        window.alert("Game is over, please reset game!");
+        return null;
     }
 
     // Check if web player is trying to make move + if it is their turn to move
