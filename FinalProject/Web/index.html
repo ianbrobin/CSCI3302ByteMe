@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tic-Tac-Roll</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="game.js"></script>
+</head>
+
+<body style="align-items: center; display: flex; width: 100%; height: 100%;">
+
+    <!-- Game Section -->
+    <div style="width:75%;" id="game-section">
+        <div class="container-fluid text-center" id="board">
+            <h1 id="gameTitle">Tic-Tac-Roll</h1>
+            <div class="row">
+                <div class="col-xs-4 cell" id="11" onclick="makeMove('11', 'web')"><br />X</div>
+                <div class="col-xs-4 cell" id="12" onclick="makeMove('12', 'web')"><br />X</div>
+                <div class="col-xs-4 cell" id="13" onclick="makeMove('13', 'web')"><br />X</div>
+            </div>
+            <div class="row">
+                <div class="col-xs-4 cell" id="21" onclick="makeMove('21', 'web')"><br />X</div>
+                <div class="col-xs-4 cell" id="22" onclick="makeMove('22', 'web')"><br />X</div>
+                <div class="col-xs-4 cell" id="23" onclick="makeMove('23', 'web')"><br />X</div>
+            </div>
+            <div class="row">
+                <div class="col-xs-4 cell" id="31" onclick="makeMove('31', 'web')"><br />X</div>
+                <div class="col-xs-4 cell" id="32" onclick="makeMove('32', 'web')"><br />X</div>
+                <div class="col-xs-4 cell" id="33" onclick="makeMove('33', 'web')"><br />X</div>
+            </div>
+            <h4 id="gameInfo" style="float: left;">Current Turn: Player</h4>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div style="width: 25%; min-height:100%; background-color: lightgray;" id="info-section">
+        <div class="container-fluid">
+            <!-- Top Section -->
+            <div class="row justify-content-center align-self-center">
+                <h3>CSCI 3302 - Intro to Robotics</h3>
+            </div>
+            <div class="row justify-content-center align-self-center">
+                <h4>Team Name: <strong>ByteMe</strong></h4>
+            </div>
+            <div class="row justify-content-center align-self-center">
+                <h5>Austin Albert - Chandler Garthwaite - Connor Thompson - Ian Brobin</h5>
+            </div>
+
+            <hr />
+
+            <!-- Middle Section -->
+            <div class="row justify-content-center align-self-center" style="padding-top: 3px;">
+                <h3><strong>Instructions or Something...</strong></h3>
+            </div>
+
+
+            <!-- Bottom of Section -->
+            <div style="position: absolute; bottom: 0; height: 55px;" id="bottomSection">
+                <button type="button" class="btn btn-primary btn-lg btn-block col-12" id="resetButton">Reset Game</button>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,9 @@
+.cell {
+    width: 250px;
+    height: 250px;
+    font-size: 72px;
+    text-align: center;
+    margin: 10px;
+    background-color: black;
+    color: goldenrod;
+}
