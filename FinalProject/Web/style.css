@@ -1,10 +1,10 @@
 .cell {
-    width: 250px;
-    height: 250px;
+    width: 200px;
+    height: 200px;
     font-size: 72px;
     text-align: center;
     margin: 10px;
     background-color: black;
     color: goldenrod;
-    line-height: 120%;
+    line-height: 92%;
 }
