@@ -19,7 +19,7 @@
 
 </head>
 
-<body style="align-items: center; display: flex; width: 100%; height: 100%;">
+<body style="align-items: center; display: flex; overflow-x: hidden; width: 100%;" >
 
     <!-- Game Section -->
     <div style="width:75%;" id="game-section">
@@ -52,7 +52,7 @@
                 <h3>CSCI 3302 - Intro to Robotics</h3>
             </div>
             <div class="row justify-content-center align-self-center">
-                <h4>Team Name: <strong>ByteMe</strong></h4>
+                <h4>Team Name: ByteMe</h4>
             </div>
             <div class="row justify-content-center align-self-center">
                 <h6 style="font-size: 12px;">Austin Albert - Chandler Garthwaite - Connor Thompson - Ian Brobin</h6>
@@ -67,7 +67,10 @@
 
 
             <!-- Bottom of Section -->
-            <div style="position: absolute; bottom: 0; height: 45px; padding-bottom: 10px;" id="bottomSection">
+            <div style="position: absolute; bottom: 0; height: 85px; padding-bottom: 10px;" id="bottomSection">
+                <div class="row justify-content-center align-self-center">
+                    <h4 id="webSocketStatus">WebSocket Status: Not Connected</h4>
+                </div>
                 <button type="button" class="btn btn-primary btn-block col-12" id="resetButton" onclick="resetGame()">Reset Game</button>
             </div>
         </div>

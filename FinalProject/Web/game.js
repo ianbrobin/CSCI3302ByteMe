@@ -13,6 +13,8 @@ cells.forEach(function(cell, index) {
 
 // Do some set-up onload
 window.onload = function() {
+    initializeROS();
+
     let windowHeight = window.innerHeight;
 
     // Make left and right section go full-height
