@@ -252,7 +252,7 @@ function makeMove(cell, player) {
     // If so, update board + whos turn it is.
     if (player == 'web' && toMove == playerSymbol) {
         board[cell] = playerSymbol;
-        //toMove = simSymbol;
+        toMove = simSymbol;
         renderBoard();
     }
     else if (player == 'web' && toMove != playerSymbol) {
