@@ -37,7 +37,7 @@ function initializeROS() {
             // so this if statement makes it so the Error Text is shown instead of the Closed text
             // if we encounter an issue on launch...
             if (!initError) {
-                webSocketText.style.color = "yellow";
+                webSocketText.style.color = "#CFB87C";
                 webSocketText.innerHTML = "WebSocket Status: Closed";
             }
             console.log('Connection to websocket server closed.');

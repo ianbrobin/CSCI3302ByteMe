@@ -227,7 +227,7 @@ function resetGame() {
 
     // Reset all cell colors (since we highlight winning cells after a win)
     for (const [key, val] of Object.entries(board)) {
-        document.getElementById(key).style.color = 'goldenrod';
+        document.getElementById(key).style.color = '#CFB87C';
     }
 }
 
