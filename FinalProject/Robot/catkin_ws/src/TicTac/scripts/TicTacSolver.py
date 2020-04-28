@@ -3,7 +3,6 @@
 import rospy
 from std_msgs.msg import Float32MultiArray, Empty, String, Int16
 from TicTac.srv import CalculateBestMove, CalculateBestMoveResponse
-import inspect
 
 #arg is string representation of game grid 
 
@@ -34,7 +33,6 @@ import inspect
 
 def calculateBestMoveReturn(arg):
     gameState = arg.input.data
-    #inspect.getmembers(MyClass, lambda a:not(inspect.isroutine(a)))
     result = String()
     result.data = gameState
     return result

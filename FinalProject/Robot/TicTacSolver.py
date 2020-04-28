@@ -1,26 +1,10 @@
+import rospy
+from std_msgs.msg import Float32MultiArray, Empty, String, Int16
+import argparse
+
 g_Namespace = ""
 
-
-if __name__ == "__main__":
-  parser = argparse.ArgumentParser(description="TicTac_GameSolver")
-  parser.add_argument('-n','--namespace', type=str, nargs='?', default='TicTac', help='Prepended string for all topics')
-  args = parser.parse_args()
-
-  init()
-
-
-def init(args):
-    global g_Namespace
-
-    g_Namespace = args.namespace
-    rospy.init_node("%s_GameSolver" % g_Namespace)
-    s = rospy.Service('%s_CalculateBestMove' % g_Namespace, String, calculateBestMove)
-    rospy.spin()
-
-
-
 #arg is string representation of game grid 
-
 
 # The game grid below is encoded into the following string.
 # Positions are marked with either p1, p2, or _ 
@@ -49,3 +33,20 @@ def init(args):
 
 def calculateBestMove(arg):
     return String(arg)
+
+
+def init(args):
+    global g_Namespace
+
+    g_Namespace = args.namespace
+    rospy.init_node("%s_GameSolver" % g_Namespace)
+    s = rospy.Service('%s_CalculateBestMove' % g_Namespace, String, calculateBestMove)
+    rospy.spin()
+
+if __name__ == "__main__":
+  parser = argparse.ArgumentParser(description="TicTac_GameSolver")
+  parser.add_argument('-n','--namespace', type=str, nargs='?', default='TicTac', help='Prepended string for all topics')
+  args = parser.parse_args()
+
+  init(args)
+

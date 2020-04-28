@@ -7,6 +7,4 @@
 # new environment variables
 
 # modified environment variables
-export PKG_CONFIG_PATH="/home/ian/Documents/School/Robotics/Labs/FinalProject/Robot/catkin_ws/devel/lib/pkgconfig:$PKG_CONFIG_PATH"
 export PWD="/home/ian/Documents/School/Robotics/Labs/FinalProject/Robot/catkin_ws/build"
-export PYTHONPATH="/home/ian/Documents/School/Robotics/Labs/FinalProject/Robot/catkin_ws/devel/lib/python3/dist-packages:$PYTHONPATH"
