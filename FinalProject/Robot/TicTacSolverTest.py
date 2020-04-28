@@ -53,16 +53,45 @@ def caseTest(recv, correct):
     print(f"Case {testNum} passed")
   else:
     allTestsTrue = False
-    print(f"Case {testNum} failed!!!")
+    print(f"Case {testNum} failed, recevied value is {recv} correct is {correct}")
   testNum += 1
 
 
 def tests(svc_GameSolver):
   global allTestsTrue
-  game1 = "p1:p1,p2,p2|_,p1,_|_,_,_"
-  game1Sol = "33"
-  game1Recv = svc_GameSolver(game1).str
-  caseTest(game1Recv, game1Sol)
+  
+  # Case 1
+  game = "p1:p1,p2,p2|_,p1,_|_,_,_"
+  gameSol = "33"
+  gameRecv = svc_GameSolver(game).str
+  caseTest(gameRecv, gameSol)
+  # Case 2
+  game = "p2:p2,p1,p1|_,p2,_|_,_,_"
+  gameSol = "33"
+  gameRecv = svc_GameSolver(game).str
+  caseTest(gameRecv, gameSol)
+  # Case 3
+  game = "p1:p1,_,p2|_,p2,_|_,_,_"
+  gameSol = "31"
+  gameRecv = svc_GameSolver(game).str
+  caseTest(gameRecv, gameSol)
+  # Case 4
+  game = "p1:p1,_,p2|_,p2,_|_,_,p1"
+  gameSol = "31"
+  gameRecv = svc_GameSolver(game).str
+  caseTest(gameRecv, gameSol)
+  # Case 5
+  game = "p1:_,_,_|_,_,_|_,_,_"
+  gameSol = "11"
+  gameRecv = svc_GameSolver(game).str
+  caseTest(gameRecv, gameSol)
+  
+  # Case 6
+  game = "p1:p1,_,_|_,p2,_|_,_,_"
+  gameSol = "12"
+  gameRecv = svc_GameSolver(game).str
+  caseTest(gameRecv, gameSol)
+  
   print("---------");
   if (allTestsTrue):
     print("All tests passed")

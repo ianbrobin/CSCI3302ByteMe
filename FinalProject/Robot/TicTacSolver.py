@@ -42,6 +42,12 @@ class State:
         self.utility = 0
         self.board = {}
         self.moves = cp.copy(moves)
+    
+    def display(self):
+        for row in range(1, 4):
+            for col in range(1, 4):
+                print(self.board.get((row, col), '.'), end=' ')
+            print()
 
         
 class TicTacToe:
@@ -50,7 +56,6 @@ class TicTacToe:
         self.nrow = nrow
         self.ncol = ncol
         self.nwin = nwin
-#        moves = # insert your general list of nrow x ncol moves here
         moves = [(row, col) for row in range(1, nrow + 1) for col in range(1, ncol + 1)]
         self.state = State(moves)
         self.nexp = nexp
@@ -67,9 +72,6 @@ class TicTacToe:
                 that will result from making the given `move`
         '''
 
-        # your code goes here
-        
-        # Solution:
         # Don't do anything if the move isn't a legal one
         if move not in state.moves:
             return state
@@ -90,9 +92,6 @@ class TicTacToe:
         else return 0.
         '''        
 
-        # your code goes here
-
-        # Solution:
         row, col = move
         player = state.to_move
         
@@ -135,19 +134,13 @@ class TicTacToe:
     def game_over(self, state):
         '''game is over if someone has won (utility!=0) or there
         are no more moves left'''
-
-        # your code goes here
         
-        # Solution:
         return state.utility!=0 or len(state.moves)==0    
 
     
     def utility(self, state, player):
         '''Return the value to player; 1 for win, -1 for loss, 0 otherwise.'''
 
-        # your code goes here
-        
-        # Solution:
         return state.utility if player=='p1' else -state.utility        
         
         
@@ -157,12 +150,10 @@ class TicTacToe:
                 print(self.state.board.get((row, col), '.'), end=' ')
             print()
         
+        
     def play_game(self, player1, player2):
         '''Play a game of tic-tac-toe!'''
 
-        # your code goes here
-
-        # Solution:
         turn_limit = self.nrow*self.ncol  # limit in case of buggy code
         turn = 0
         while turn<=turn_limit:
@@ -192,7 +183,7 @@ def alphabeta_search(game):
             if value >= beta:
                 return value
             alpha = max(alpha, value)
-        return value
+        return value - .0001
 
     def min_value(state, alpha, beta):
         if game.game_over(state):
@@ -204,19 +195,20 @@ def alphabeta_search(game):
             if value <= alpha:
                 return value
             beta = min(beta, value)
-        return value
+        return value - .0001
 
     # Body of alphabeta_cutoff_search:
     best_score = -float('inf')
     beta = float('inf')
     best_action = None
     for a in game.state.moves:
-        
-        value = min_value(game.result(a, game.state), best_score, beta)
+        state = game.result(a, game.state)
+        value = min_value(state, best_score, beta)
         if value > best_score:
             best_score = value
             best_action = a
-    return best_action                    
+    return best_action             
+
 
 
 def calculateBestMove(arg):
@@ -245,17 +237,12 @@ def calculateBestMove(arg):
     
     ttt.state.to_move = player
     # Print state
+    print("Recvied:")
     ttt.display()
-    print(f"to_move = {ttt.state.to_move}")
-    print(f"utility = {ttt.state.utility}")
-    print(f"board = {ttt.state.board}")
-    print(f"moves = {ttt.state.moves}")
+
     move = alphabeta_search(ttt)
-    ttt.state.board[move] = player
-    ttt.display()
-    print(move)
-    
-    return "stub"
+    print(f"Best move: {move}")
+    return str(move[0]) + str(move[1])
 
 
 
