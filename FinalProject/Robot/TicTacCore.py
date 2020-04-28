@@ -35,6 +35,25 @@ pub_GameCompleted = ""
 svc_GameSolver = ""
 
 
+def callback_ResetGame(arg):
+    #reset stored game state
+    pass
+
+
+def callback_HumanTurnSubmitted(arg):
+    #add human turn to stored game state
+    #request next robot move
+    #add robot move to stored game state
+    #push robot move to message hub
+    pass
+
+
+def callback_GameCompleted(arg):
+    #display winning player (hmn/rbt)
+    pass
+
+
+
 def init(args):
     global g_Namespace
     #SUBS
@@ -72,23 +91,7 @@ def init(args):
     # TODID: Set sparki's servo to an angle pointing inward to the map (e.g., 90)
     print("Init ran...")
 
-    
-def callback_ResetGame(arg):
-    #reset stored game state
-    pass
 
-
-def callback_HumanTurnSubmitted(arg):
-    #add human turn to stored game state
-    #request next robot move
-    #add robot move to stored game state
-    #push robot move to message hub
-    pass
-
-
-def callback_GameCompleted(arg):
-    #display winning player (hmn/rbt)
-    pass
     
 
 if __name__ == "__main__":
