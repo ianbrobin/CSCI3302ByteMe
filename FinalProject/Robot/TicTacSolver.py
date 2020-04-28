@@ -37,10 +37,13 @@ g_Namespace = ""
 
 
 def calculateBestMove(arg):
+    #get python string from arg data
     argStr = arg.str
 
 
-    return argStr
+    #return standard python string
+    argReverse = argStr[::-1]
+    return argReverse
 
 
 

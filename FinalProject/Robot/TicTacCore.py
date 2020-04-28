@@ -63,8 +63,9 @@ def init(args):
     rospy.wait_for_service('%s_CalculateBestMove' % g_Namespace)
     svc_GameSolver = rospy.ServiceProxy('%s_CalculateBestMove' % g_Namespace, TicTacSolver)
     #response = svc_GameSolver(String(gameState)).str
-    response = svc_GameSolver("HELLO WORLD").str
-    print(response)
+    request = "SERVICE INIT"
+    response = svc_GameSolver(request).str
+    print(request, ":", response)
 
     rospy.sleep(1)
 
