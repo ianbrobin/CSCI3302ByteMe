@@ -5,6 +5,7 @@
 #   _31_|_32_|_33_
 #
 
+import rospy
 import copy
 import math
 import random
@@ -15,6 +16,12 @@ from PIL import Image, ImageDraw
 import numpy as np
 from pprint import pprint
 from math import ceil
+from geometry_msgs.msg import Twist
+from turtlesim.msg import Pose
+from std_msgs.msg import Float32MultiArray, String, Int16
+from std_msgs.msg import Empty as msgEmpty
+from std_srvs.srv import Empty as srvEmpty
+from turtlesim.srv import TeleportAbsolute, SetPen
 
 
 g_Namespace = ""
@@ -23,7 +30,17 @@ sub_GameReset = ""
 sub_HumanTurnSubmitted = ""
 sub_RobotTurnSubmitted = ""
 sub_GameCompleted = ""
+sub_Turtle1Pose = ""
+#PUBS
+pub_Turtle1Command = ""
+#SVCS
+svc_TurtleClear = ""
+svc_Turtle1Pen = ""
+svc_Turtle1TeleportAbs = ""
 
+ttl_X = 0
+ttl_Y = 0
+ttl_Theta = 0
 
 
 
@@ -55,6 +72,33 @@ def callback_GameCompleted(arg):
     
 
 
+def callback_TurtlePose(arg):
+    global ttl_X
+    global ttl_Y
+    global ttl_Theta
+    ttl_X = arg.x
+    ttl_Y = arg.y
+    ttl_Theta = arg.theta
+
+
+def disableTurtle1Pen():
+    r = 255
+    g = 255
+    b = 255
+    width = 3
+    off = 1
+    svc_Turtle1Pen(r, g, b, width, off)
+
+def enableTurtle1Pen():
+    r = 255
+    g = 255
+    b = 255
+    width = 3
+    off = 0
+    svc_Turtle1Pen(r, g, b, width, off)
+
+
+
 def init(args):
     global g_Namespace
     #SUBS
@@ -62,6 +106,13 @@ def init(args):
     global sub_HumanTurnSubmitted
     global sub_RobotTurnSubmitted
     global sub_GameCompleted
+    global sub_Turtle1Pose
+    #PUBS
+    global pub_Turtle1Command
+    #SVCS
+    global svc_TurtleClear
+    global svc_Turtle1Pen
+    global svc_Turtle1TeleportAbs
 
 
     g_Namespace = args.namespace
@@ -70,16 +121,50 @@ def init(args):
     rospy.init_node("%s_TurtleDriver" % g_Namespace)
 
     # init subs
-    sub_GameReset = rospy.Subscriber("/%s/reset" % g_na-mespace, Pose2D, callback_ResetGame)
+    sub_GameReset = rospy.Subscriber("/%s/reset" % g_Namespace, String, callback_ResetGame)
     sub_HumanTurnSubmitted = rospy.Subscriber('/%s/HumanTurnSubmitted' % g_Namespace, String, callback_HumanTurnSubmitted)
     sub_RobotTurnSubmitted = rospy.Subscriber('/%s/RobotTurnSubmitted' % g_Namespace, String, callback_RobotTurnSubmitted)
     sub_GameCompleted = rospy.Subscriber('/%s/GameCompleted' % g_Namespace, String, callback_GameCompleted)
+    sub_Turtle1Pose = rospy.Subscriber('/turtle1/pose', Pose, callback_TurtlePose)
+
+    # init pubs
+    pub_Turtle1Command = rospy.Publisher("/turtle1/cmd_vel", Twist, queue_size=10)
+
+    #init services
+    rospy.wait_for_service('/clear')
+    rospy.wait_for_service('/turtle1/teleport_absolute')
+    rospy.wait_for_service('/turtle1/set_pen')
+    svc_TurtleClear = rospy.ServiceProxy('/clear', srvEmpty)    
+    svc_Turtle1TeleportAbs = rospy.ServiceProxy('/turtle1/teleport_absolute', TeleportAbsolute)
+    svc_Turtle1Pen = rospy.ServiceProxy('/turtle1/set_pen', SetPen)
+
+
+    
 
     rospy.sleep(1)
+    
+#set default pen
+    enableTurtle1Pen()
+#move 4 units right
+    veloCmd = Twist()
+    veloCmd.linear.x = 4
+    pub_TurtleCommand.publish(veloCmd)
+#wait for turtle to stop
+    rospy.sleep(2)
+#clear map
+    svc_TurtleClear()
+#disable pen
+    disableTurtle1Pen()
+    rospy.sleep(.1)
+#teleport
+    svc_TurtleTeleportAbs(0, 5, 0)
+#enable pen
+    enableTurtle1Pen()
+    rospy.sleep(.1)
+#move again
+    pub_TurtleCommand.publish(veloCmd)
 
-    # TODID: Set sparki's servo to an angle pointing inward to the map (e.g., 90)
-    publisher_servo.publish(SPARKI_SERVO_LEFT)
-    publisher_render.publish()
+
     print("Init ran...")
 
 
@@ -91,4 +176,4 @@ if __name__ == "__main__":
   parser.add_argument('-rt','--robot_token', type=str, nargs='?', default="O", help='Default robot symbol')
   args = parser.parse_args()
 
-  init()
+  init(args)
