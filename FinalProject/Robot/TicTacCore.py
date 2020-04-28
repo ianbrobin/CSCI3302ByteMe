@@ -4,7 +4,9 @@
 #   _21_|_22_|_23_
 #   _31_|_32_|_33_
 #
-
+import rospy
+from geometry_msgs.msg import Pose2D
+from std_msgs.msg import Float32MultiArray, Empty, String, Int16
 import copy
 import math
 import random
@@ -31,16 +33,6 @@ pub_GameCompleted = ""
 svc_GameSolver = ""
 
 
-if __name__ == "__main__":
-  parser = argparse.ArgumentParser(description="TicTac_GameCore")
-  parser.add_argument('-n','--namespace', type=str, nargs='?', default='TicTac', help='Prepended string for all topics')
-  parser.add_argument('-pt','--player_token', type=str, nargs='?', default="X", help='Default player symbol')
-  parser.add_argument('-rt','--robot_token', type=str, nargs='?', default="O", help='Default robot symbol')
-  args = parser.parse_args()
-
-  init()
-
-
 def init(args):
     global g_Namespace
     #SUBS
@@ -57,7 +49,7 @@ def init(args):
     rospy.init_node("%s_GameCore" % g_Namespace)
 
     # init subs
-    sub_GameReset = rospy.Subscriber("/%s/reset" % g_na-mespace, Pose2D, callback_ResetGame)
+    sub_GameReset = rospy.Subscriber("/%s/reset" % g_Namespace, Pose2D, callback_ResetGame)
     sub_HumanTurnSubmitted = rospy.Subscriber('/%s/HumanTurnSubmitted' % g_Namespace, String, callback_HumanTurnSubmitted)
     sub_GameCompleted = rospy.Subscriber('/%s/GameCompleted' % g_Namespace, String, callback_GameCompleted)
 
@@ -77,9 +69,7 @@ def init(args):
     publisher_render.publish()
     print("Init ran...")
 
-
-
-
+    
 def callback_ResetGame(arg):
     #reset stored game state
     pass
@@ -96,3 +86,13 @@ def callback_HumanTurnSubmitted(arg):
 def callback_GameCompleted(arg):
     #display winning player (hmn/rbt)
     pass
+    
+
+if __name__ == "__main__":
+  parser = argparse.ArgumentParser(description="TicTac_GameCore")
+  parser.add_argument('-n','--namespace', type=str, nargs='?', default='TicTac', help='Prepended string for all topics')
+  parser.add_argument('-pt','--player_token', type=str, nargs='?', default="X", help='Default player symbol')
+  parser.add_argument('-rt','--robot_token', type=str, nargs='?', default="O", help='Default robot symbol')
+  args = parser.parse_args()
+
+  init(args)
