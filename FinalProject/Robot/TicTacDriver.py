@@ -25,14 +25,34 @@ sub_RobotTurnSubmitted = ""
 sub_GameCompleted = ""
 
 
-if __name__ == "__main__":
-  parser = argparse.ArgumentParser(description="TicTac_GameCore")
-  parser.add_argument('-n','--namespace', type=str, nargs='?', default='TicTac', help='Prepended string for all topics')
-  parser.add_argument('-pt','--player_token', type=str, nargs='?', default="X", help='Default player symbol')
-  parser.add_argument('-rt','--robot_token', type=str, nargs='?', default="O", help='Default robot symbol')
-  args = parser.parse_args()
 
-  init()
+
+#arg type = string
+#arg data = empty
+def callback_ResetGame(arg):
+    #clear screen and redraw tic tac grid
+    pass
+
+
+#arg type = string
+#arg data = standard notation cell position (ie: 12)
+def callback_HumanTurnSubmitted(arg):
+    #paint new player token on the tic tac grid
+    pass
+
+
+#arg type = string
+#arg data = standard notation cell position (ie: 12)
+def callback_RobotTurnSubmitted(arg):
+    #paint new player token on the tic tac grid by driving the robot to the position and drawing a shape
+    pass
+
+
+#arg type = string
+#arg data = winner name (Human/Robot)
+def callback_GameCompleted(arg):
+    pass
+    
 
 
 def init(args):
@@ -63,28 +83,12 @@ def init(args):
     print("Init ran...")
 
 
-#arg type = string
-#arg data = empty
-def callback_ResetGame(arg):
-    #clear screen and redraw tic tac grid
-    pass
 
+if __name__ == "__main__":
+  parser = argparse.ArgumentParser(description="TicTac_GameCore")
+  parser.add_argument('-n','--namespace', type=str, nargs='?', default='TicTac', help='Prepended string for all topics')
+  parser.add_argument('-pt','--player_token', type=str, nargs='?', default="X", help='Default player symbol')
+  parser.add_argument('-rt','--robot_token', type=str, nargs='?', default="O", help='Default robot symbol')
+  args = parser.parse_args()
 
-#arg type = string
-#arg data = standard notation cell position (ie: 12)
-def callback_HumanTurnSubmitted(arg):
-    #paint new player token on the tic tac grid
-    pass
-
-
-#arg type = string
-#arg data = standard notation cell position (ie: 12)
-def callback_RobotTurnSubmitted(arg):
-    #paint new player token on the tic tac grid by driving the robot to the position and drawing a shape
-    pass
-
-
-#arg type = string
-#arg data = winner name (Human/Robot)
-def callback_GameCompleted(arg):
-    pass
+  init()

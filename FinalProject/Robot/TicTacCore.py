@@ -17,6 +17,8 @@ from PIL import Image, ImageDraw
 import numpy as np
 from pprint import pprint
 from math import ceil
+from srv._TicTacSolver import TicTacSolver
+import string
 
 
 g_Namespace = ""
@@ -59,14 +61,14 @@ def init(args):
 
     #init services
     rospy.wait_for_service('%s_CalculateBestMove' % g_Namespace)
-    svc_GameSolver = rospy.ServiceProxy('%s_CalculateBestMove' % g_Namespace, AddTwoInts)
-    #response = svc_GameSolver(String(gameState))
+    svc_GameSolver = rospy.ServiceProxy('%s_CalculateBestMove' % g_Namespace, TicTacSolver)
+    #response = svc_GameSolver(String(gameState)).str
+    response = svc_GameSolver("HELLO WORLD").str
+    print(response)
 
     rospy.sleep(1)
 
     # TODID: Set sparki's servo to an angle pointing inward to the map (e.g., 90)
-    publisher_servo.publish(SPARKI_SERVO_LEFT)
-    publisher_render.publish()
     print("Init ran...")
 
     
