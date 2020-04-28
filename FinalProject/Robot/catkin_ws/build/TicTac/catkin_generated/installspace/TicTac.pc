@@ -1,0 +1,8 @@
+prefix=/home/ian/Documents/School/Robotics/Labs/FinalProject/Robot/catkin_ws/install
+
+Name: TicTac
+Description: Description of TicTac
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 
