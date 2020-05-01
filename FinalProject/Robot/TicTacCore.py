@@ -24,6 +24,7 @@ import string
 g_Namespace = ""
 g_PlayerToken = ""
 g_RobotToken = ""
+g_GamestateArr = ""
 #SUBS
 sub_GameReset = ""
 sub_HumanTurnSubmitted = ""
@@ -35,22 +36,56 @@ pub_GameCompleted = ""
 svc_GameSolver = ""
 
 
+def cellIDToArrIdx(cellID):
+    row = int(cellID[0]) - 1 #convert to 0 indexed int
+    col = int(cellID[1]) - 1 #convert to 0 indexed int
+    return (row * 3) + cell
+
+def getGameStateStr(gameArr):
+    gameStr = ""
+    gameStr = gameArr[0] + "," + gameArr[1] + "," + gameArr[2]
+    gameStr = gameStr + "|" + gameArr[3] + "," + gameArr[4] + "," + gameArr[5]
+    gameStr = gameStr + "|" + gameArr[6] + "," + gameArr[7] + "," + gameArr[8]
+
+
 def callback_ResetGame(arg):
     #reset stored game state
-    pass
+    g_GamestateArr = ["_"] * 9
 
 
 def callback_HumanTurnSubmitted(arg):
-    #add human turn to stored game state
-    #request next robot move
-    #add robot move to stored game state
-    #push robot move to message hub
-    pass
+    global g_PlayerToken
+    global g_RobotToken
+    global g_GamestateArr
+    global svc_GameSolver
+    global pub_RobotTurnSubmitted
+    
+    #add human move to arr
+    humanArrIdx = cellIDToArrIdx(arg)
+    g_GamestateArr[humanArrIdx] = g_PlayerToken
+
+    #serialize gamestate to string
+    gameStateStr = getGameStateStr(g_GamestateArr)
+    gameStateStr = g_RobotToken + ":" + gameStateStr
+
+
+
+    #request robot move
+    robotMove = svc_GameSolver(gameStateStr)
+
+    #add robot move to gamestate
+    robotArrIdx = cellIDToArrIdx(robotMove)
+    g_GamestateArr[robotArrIdx] = g_RobotToken
+
+    #push robot move to msg hub
+    pub_RobotTurnSubmitted.publish(robotMove)
+
+
 
 
 def callback_GameCompleted(arg):
     #display winning player (hmn/rbt)
-    pass
+    print("Game completed! Winner: ", arg)
 
 
 
@@ -82,9 +117,6 @@ def init(args):
     rospy.wait_for_service('%s_CalculateBestMove' % g_Namespace)
     svc_GameSolver = rospy.ServiceProxy('%s_CalculateBestMove' % g_Namespace, TicTacSolver)
     #response = svc_GameSolver(String(gameState)).str
-    request = "SERVICE INIT"
-    response = svc_GameSolver(request).str
-    print(request, ":", response)
 
     rospy.sleep(1)
 
@@ -97,8 +129,8 @@ def init(args):
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description="TicTac_GameCore")
   parser.add_argument('-n','--namespace', type=str, nargs='?', default='TicTac', help='Prepended string for all topics')
-  parser.add_argument('-pt','--player_token', type=str, nargs='?', default="X", help='Default player symbol')
-  parser.add_argument('-rt','--robot_token', type=str, nargs='?', default="O", help='Default robot symbol')
+  parser.add_argument('-pt','--player_token', type=str, nargs='?', default="p1", help='Default player symbol')
+  parser.add_argument('-rt','--robot_token', type=str, nargs='?', default="p2", help='Default robot symbol')
   args = parser.parse_args()
 
   init(args)
