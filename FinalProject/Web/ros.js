@@ -1,4 +1,4 @@
-let connectionStatus = null;
+let connectionStatus = 1;
 let ros = null;
 let webSocketText = null;
 let initError = true;
@@ -49,7 +49,7 @@ function initializeROS() {
     }
 
     // Check that we connected successfully since apparently ROSLib doesn't throw errors when there's an error connecting...
-    if (connectionStatus !== 1) {
+    if (connectionStatus != 1) {
         window.alert("Unable to initalize WebSocket connection!");
         webSocketText.style.color = "red";
         webSocketText.innerHTML = "WebSocket Status: Error";
