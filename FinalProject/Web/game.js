@@ -116,12 +116,14 @@ function checkWinnerHelper(symbols, cells) {
     if (symbols.size === 1) {
         // Check if the only symbol is the players...
         if (symbols.has(playerSymbol)) {
+			publishGameWinner("player");
             highlightWinningCells(cells, 1);
             enabled = false;
             return 1;
         }
         // Check if the only symbol is the robots
         else if (symbols.has(simSymbol)) {
+			publishGameWinner("robot");
             highlightWinningCells(cells, -1);
             enabled = false;
             return -1;
@@ -217,6 +219,8 @@ function resetGame() {
     toMove = 'X';  // Whos turn it is
     enabled = true;
 
+	publishGameReset();
+
     // Initialize each cell to no move
     cells.forEach(function(cell, index) {
         board[cell] = '-';
@@ -254,6 +258,7 @@ function makeMove(cell, player) {
         board[cell] = playerSymbol;
         toMove = simSymbol;
         renderBoard();
+	publishMove(cell);
     }
     else if (player == 'web' && toMove != playerSymbol) {
         window.alert('It is not your turn!');
