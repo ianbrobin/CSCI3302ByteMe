@@ -132,6 +132,8 @@ def init(args):
     # TODID: Set sparki's servo to an angle pointing inward to the map (e.g., 90)
     print("Init ran...")
 
+    rospy.spin()
+
 
     
 
