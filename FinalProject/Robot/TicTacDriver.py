@@ -148,7 +148,7 @@ def init(args):
 #move 4 units right
     veloCmd = Twist()
     veloCmd.linear.x = 4
-    pub_TurtleCommand.publish(veloCmd)
+    pub_Turtle1Command.publish(veloCmd)
 #wait for turtle to stop
     rospy.sleep(2)
 #clear map
@@ -157,12 +157,12 @@ def init(args):
     disableTurtle1Pen()
     rospy.sleep(.1)
 #teleport
-    svc_TurtleTeleportAbs(0, 5, 0)
+    svc_Turtle1TeleportAbs(0, 5, 0)
 #enable pen
     enableTurtle1Pen()
     rospy.sleep(.1)
 #move again
-    pub_TurtleCommand.publish(veloCmd)
+    pub_Turtle1Command.publish(veloCmd)
 
 
     print("Init ran...")
