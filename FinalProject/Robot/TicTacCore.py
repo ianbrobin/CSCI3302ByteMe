@@ -79,7 +79,7 @@ def callback_HumanTurnSubmitted(arg):
 
 
     #request robot move
-    robotMove = svc_GameSolver(gameStateStr)
+    robotMove = svc_GameSolver(gameStateStr).str
 
     #add robot move to gamestate
     robotArrIdx = cellIDToArrIdx(robotMove)
@@ -87,6 +87,7 @@ def callback_HumanTurnSubmitted(arg):
 
     #push robot move to msg hub
     pub_RobotTurnSubmitted.publish(robotMove)
+    print(robotMove)
 
 
 
