@@ -4,6 +4,14 @@
 #   _21_|_22_|_23_
 #   _31_|_32_|_33_
 #
+
+import sys
+
+# Had to add this for me and Chandler because our paths get dicked on...
+# This fixed "import rospy" error finally after like weeks
+if sys.argv[-1] == 'mac':
+  sys.path.append('/opt/ros/melodic/lib/python2.7/dist-packages')
+    
 import rospy
 from geometry_msgs.msg import Pose2D
 from std_msgs.msg import Float32MultiArray, Empty, String, Int16
@@ -131,6 +139,7 @@ if __name__ == "__main__":
   parser.add_argument('-n','--namespace', type=str, nargs='?', default='TicTac', help='Prepended string for all topics')
   parser.add_argument('-pt','--player_token', type=str, nargs='?', default="p1", help='Default player symbol')
   parser.add_argument('-rt','--robot_token', type=str, nargs='?', default="p2", help='Default robot symbol')
+  parser.add_argument('-p', '--platform', type=str, nargs='?', default='windows', help='Platform you are running on')
   args = parser.parse_args()
 
   init(args)
