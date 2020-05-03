@@ -72,6 +72,7 @@ function renderBoard() {
     // Tie
     else if (winner === -2) {
         document.getElementById('gameInfo').innerText = 'Tie!';
+        enabled = false;
     }
     else {
         if (winner === 1) {
@@ -232,6 +233,7 @@ function resetGame() {
     simSymbol = 'O';
     toMove = 'X';  // Whos turn it is
     enabled = true;
+    moves = 0;
 
     publishGameReset("");
 
