@@ -5,6 +5,7 @@ let playerSymbol = 'X';  // What symbol the human will play with
 let simSymbol = 'O';
 let toMove = 'X';  // Whos turn it is
 let enabled = true;
+let moves = 0;  // Keep track of how many moves have been made
 
 // Initialize each cell to null
 cells.forEach(function (cell, index) {
@@ -67,6 +68,10 @@ function renderBoard() {
         } else if (toMove == simSymbol) {
             document.getElementById('gameInfo').innerText = 'Current Turn: Robot';
         }
+    }
+    // Tie
+    else if (winner === -2) {
+        document.getElementById('gameInfo').innerText = 'Tie!';
     }
     else {
         if (winner === 1) {
@@ -210,6 +215,11 @@ function checkWinner(allowPublish) {
     winner = checkWinnerHelper(results, winningCells, allowPublish);
     if (winner !== 0) { return winner }
 
+    // Check for ties
+    if (winner === 0 && moves === 9) {
+        return -2;
+    }
+
     // If no winner, return 0
     return 0;
 
@@ -259,10 +269,11 @@ function makeMove(cell, player) {
     // Check if web player is trying to make move + if it is their turn to move
     // If so, update board + whos turn it is.
     if (player == 'web' && toMove == playerSymbol) {
+        moves += 1;
         board[cell] = playerSymbol;
         toMove = simSymbol;
         renderBoard();
-        publishMove(cell);
+        publishMove(cell);  // Publish move
     }
     else if (player == 'web' && toMove != playerSymbol) {
         window.alert('It is not your turn!');
@@ -271,6 +282,7 @@ function makeMove(cell, player) {
     // Check if simulator/robot is trying to make move + if it is their turn to move
     // If so, update board + whos turn it is
     else if (player == 'sim' && toMove == simSymbol) {
+        moves += 1;
         board[cell] = simSymbol;
         toMove = playerSymbol;
         renderBoard();
