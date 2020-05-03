@@ -120,7 +120,8 @@ def rotate(angle, vel_msg, velocity_publisher, clockwise):
     t0 = rospy.Time.now().to_sec()
     current_angle = 0
     rospy.sleep(.1)
-    while(current_angle < relative_angle):
+    while(current_angle <= relative_angle):
+        print("should be rotating")
         velocity_publisher.publish(vel_msg)
         rospy.sleep(.1)
         t1 = rospy.Time.now().to_sec()
@@ -175,6 +176,7 @@ def init(args):
     print("Starting drawing")
     veloCmd = Twist()
     rotate(90,veloCmd,pub_Turtle1Command,True)
+    print("Done Drawing")
 
 
 
