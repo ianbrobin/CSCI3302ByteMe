@@ -69,7 +69,7 @@ def callback_RobotTurnSubmitted(arg):
 #arg data = winner name (Human/Robot)
 def callback_GameCompleted(arg):
     pass
-    
+
 
 
 def callback_TurtlePose(arg):
@@ -97,7 +97,39 @@ def enableTurtle1Pen():
     off = 0
     svc_Turtle1Pen(r, g, b, width, off)
 
+def rotate(angle, vel_msg, velocity_publisher, clockwise):
+    speed = 30
+    PI = 3.1415926535897
+    #Converting from angles to radians
+    angular_speed = speed*2*PI/360
+    relative_angle = angle*2*PI/360
 
+    #We wont use linear components
+    vel_msg.linear.x=0
+    vel_msg.linear.y=0
+    vel_msg.linear.z=0
+    vel_msg.angular.x = 0
+    vel_msg.angular.y = 0
+
+    # Checking if our movement is CW or CCW
+    if clockwise:
+        vel_msg.angular.z = -abs(angular_speed)
+    else:
+        vel_msg.angular.z = abs(angular_speed)
+    # Setting the current time for distance calculus
+    t0 = rospy.Time.now().to_sec()
+    current_angle = 0
+    rospy.sleep(.1)
+    while(current_angle < relative_angle):
+        velocity_publisher.publish(vel_msg)
+        rospy.sleep(.1)
+        t1 = rospy.Time.now().to_sec()
+        current_angle = angular_speed*(t1-t0)
+        rospy.sleep(.1)
+    #Forcing our robot to stop
+    vel_msg.angular.z = 0
+    velocity_publisher.publish(vel_msg)
+    rospy.spin()
 
 def init(args):
     global g_Namespace
@@ -134,38 +166,19 @@ def init(args):
     rospy.wait_for_service('/clear')
     rospy.wait_for_service('/turtle1/teleport_absolute')
     rospy.wait_for_service('/turtle1/set_pen')
-    svc_TurtleClear = rospy.ServiceProxy('/clear', srvEmpty)    
+    svc_TurtleClear = rospy.ServiceProxy('/clear', srvEmpty)
     svc_Turtle1TeleportAbs = rospy.ServiceProxy('/turtle1/teleport_absolute', TeleportAbsolute)
     svc_Turtle1Pen = rospy.ServiceProxy('/turtle1/set_pen', SetPen)
 
 
-    
 
-    rospy.sleep(1)
-    
-#set default pen
-    enableTurtle1Pen()
-#move 4 units right
+    print("Starting drawing")
     veloCmd = Twist()
-    veloCmd.linear.x = 4
-    pub_Turtle1Command.publish(veloCmd)
-#wait for turtle to stop
-    rospy.sleep(2)
-#clear map
-    svc_TurtleClear()
-#disable pen
-    disableTurtle1Pen()
-    rospy.sleep(.1)
-#teleport
-    svc_Turtle1TeleportAbs(0, 5, 0)
-#enable pen
-    enableTurtle1Pen()
-    rospy.sleep(.1)
-#move again
-    pub_Turtle1Command.publish(veloCmd)
+    rotate(90,veloCmd,pub_Turtle1Command,True)
 
 
-    print("Init ran...")
+
+    print("Init ran... driver")
 
 
 
