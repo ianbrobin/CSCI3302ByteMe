@@ -172,10 +172,35 @@ def init(args):
     svc_Turtle1Pen = rospy.ServiceProxy('/turtle1/set_pen', SetPen)
 
 
-
+    #svc_Turtle1TeleportAbs(2, 3, 90*2*PI/360 )
     print("Starting drawing")
+    PI = 3.1415926535897
     veloCmd = Twist()
-    rotate(90,veloCmd,pub_Turtle1Command,True)
+    disableTurtle1Pen()
+    svc_Turtle1TeleportAbs(1, 3, 0 )
+    enableTurtle1Pen()
+    veloCmd.linear.x=9
+    pub_Turtle1Command.publish(veloCmd)
+    rospy.sleep(.1)
+    disableTurtle1Pen()
+    svc_Turtle1TeleportAbs(1, 7, 0)
+    enableTurtle1Pen()
+    veloCmd.linear.x=9
+    pub_Turtle1Command.publish(veloCmd)
+    disableTurtle1Pen()
+    svc_Turtle1TeleportAbs(4, 1, 90*2*PI/360 )
+    enableTurtle1Pen()
+    veloCmd.linear.x=9
+    pub_Turtle1Command.publish(veloCmd)
+    disableTurtle1Pen()
+    svc_Turtle1TeleportAbs(7, 1, 90*2*PI/360 )
+    enableTurtle1Pen()
+    veloCmd.linear.x=9
+    pub_Turtle1Command.publish(veloCmd)
+
+
+
+    #rotate(90,veloCmd,pub_Turtle1Command,True)
     print("Done Drawing")
 
 
