@@ -32,7 +32,7 @@ import string
 g_Namespace = ""
 g_PlayerToken = ""
 g_RobotToken = ""
-g_GamestateArr = ""
+g_GamestateArr = ["_"] * 9
 #SUBS
 sub_GameReset = ""
 sub_HumanTurnSubmitted = ""
@@ -45,20 +45,27 @@ svc_GameSolver = ""
 
 
 def cellIDToArrIdx(cellID):
+    if(cellID == ""):
+        print("INVALID MOVE")
+        return -1
+
     row = int(cellID[0]) - 1 #convert to 0 indexed int
     col = int(cellID[1]) - 1 #convert to 0 indexed int
-    return (row * 3) + cell
+    return (row * 3) + col
 
 def getGameStateStr(gameArr):
     gameStr = ""
     gameStr = gameArr[0] + "," + gameArr[1] + "," + gameArr[2]
     gameStr = gameStr + "|" + gameArr[3] + "," + gameArr[4] + "," + gameArr[5]
     gameStr = gameStr + "|" + gameArr[6] + "," + gameArr[7] + "," + gameArr[8]
-
+    return gameStr
 
 def callback_ResetGame(arg):
+    global g_GamestateArr
+
     #reset stored game state
     g_GamestateArr = ["_"] * 9
+    print("Reset Game")
 
 
 def callback_HumanTurnSubmitted(arg):
@@ -67,6 +74,7 @@ def callback_HumanTurnSubmitted(arg):
     global g_GamestateArr
     global svc_GameSolver
     global pub_RobotTurnSubmitted
+    arg = str(arg.data)
     
     #add human move to arr
     humanArrIdx = cellIDToArrIdx(arg)
@@ -75,7 +83,6 @@ def callback_HumanTurnSubmitted(arg):
     #serialize gamestate to string
     gameStateStr = getGameStateStr(g_GamestateArr)
     gameStateStr = g_RobotToken + ":" + gameStateStr
-
 
 
     #request robot move
@@ -87,19 +94,21 @@ def callback_HumanTurnSubmitted(arg):
 
     #push robot move to msg hub
     pub_RobotTurnSubmitted.publish(robotMove)
-    print(robotMove)
+    print(arg, " => ", robotMove)
 
 
 
 
 def callback_GameCompleted(arg):
     #display winning player (hmn/rbt)
-    print("Game completed! Winner: ", arg)
+    print("Game completed! Winner: ", arg.data)
 
 
 
 def init(args):
     global g_Namespace
+    global g_PlayerToken
+    global g_RobotToken
     #SUBS
     global sub_GameReset
     global sub_HumanTurnSubmitted
@@ -107,6 +116,8 @@ def init(args):
     #PUBS
     global pub_RobotTurnSubmitted
     global pub_GameCompleted
+    #SVC
+    global svc_GameSolver
 
     g_Namespace = args.namespace
     g_PlayerToken = args.player_token
@@ -114,7 +125,7 @@ def init(args):
     rospy.init_node("%s_GameCore" % g_Namespace)
 
     # init subs
-    sub_GameReset = rospy.Subscriber("/%s/reset" % g_Namespace, Pose2D, callback_ResetGame)
+    sub_GameReset = rospy.Subscriber("/%s/GameReset" % g_Namespace, String, callback_ResetGame)
     sub_HumanTurnSubmitted = rospy.Subscriber('/%s/HumanTurnSubmitted' % g_Namespace, String, callback_HumanTurnSubmitted)
     sub_GameCompleted = rospy.Subscriber('/%s/GameCompleted' % g_Namespace, String, callback_GameCompleted)
 

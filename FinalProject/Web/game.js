@@ -7,12 +7,12 @@ let toMove = 'X';  // Whos turn it is
 let enabled = true;
 
 // Initialize each cell to null
-cells.forEach(function(cell, index) {
-   board[cell] = '-';
+cells.forEach(function (cell, index) {
+    board[cell] = '-';
 });
 
 // Do some set-up onload
-window.onload = function() {
+window.onload = function () {
     initializeROS();
 
     let windowHeight = window.innerHeight;
@@ -58,7 +58,7 @@ function renderBoard() {
         document.getElementById(key).innerHTML = '<br />' + val.toString();
     }
 
-    let winner = checkWinner();
+    let winner = checkWinner(true);
 
     // If no winner, update text to display whos turn it is
     if (winner === 0) {
@@ -87,7 +87,7 @@ function highlightWinningCells(winningCells, winner) {
         color = 'red';
     }
 
-    winningCells.forEach(function(val, index) {
+    winningCells.forEach(function (val, index) {
         document.getElementById(val).style.color = color;
     })
 }
@@ -111,19 +111,23 @@ function getCellValue(row, col) {
 
 // This is a helper function for checkWinner() which takes in our two sets and sees if there is a winner + if there is,
 // which player won
-function checkWinnerHelper(symbols, cells) {
+function checkWinnerHelper(symbols, cells, allowPublish) {
     // Check if there's only one symbol in our set. If there is, there is 3 in a row!
     if (symbols.size === 1) {
         // Check if the only symbol is the players...
         if (symbols.has(playerSymbol)) {
-			publishGameWinner("player");
+            if (allowPublish === true) {
+                publishGameComplete("player");
+            }
             highlightWinningCells(cells, 1);
             enabled = false;
             return 1;
         }
         // Check if the only symbol is the robots
         else if (symbols.has(simSymbol)) {
-			publishGameWinner("robot");
+            if (allowPublish === true) {
+                publishGameComplete("robot");
+            }
             highlightWinningCells(cells, -1);
             enabled = false;
             return -1;
@@ -134,7 +138,7 @@ function checkWinnerHelper(symbols, cells) {
 
 
 // This function looks at our current board state (held in dictionary board) and determines if we have a winner or not
-function checkWinner() {
+function checkWinner(allowPublish) {
     let winner = 0;  // 0 = no winner, 1 = player win, -1 = robot win
     var results = new Set();  // Will hold the values of cells we are checking (i.e. will hold X or O)
     var winningCells = new Set();  // Will hold the cell locations we are checking
@@ -153,8 +157,8 @@ function checkWinner() {
         }
 
         // Check our sets for a winner, if one exists break out of function
-        winner = checkWinnerHelper(results, winningCells);
-        if (winner !== 0) {return winner}
+        winner = checkWinnerHelper(results, winningCells, allowPublish);
+        if (winner !== 0) { return winner }
 
     }
 
@@ -172,8 +176,8 @@ function checkWinner() {
         }
 
         // Check our sets for a winner, if one exists break out of function
-        winner = checkWinnerHelper(results, winningCells);
-        if (winner !== 0) {return winner}
+        winner = checkWinnerHelper(results, winningCells, allowPublish);
+        if (winner !== 0) { return winner }
     }
 
 
@@ -189,8 +193,8 @@ function checkWinner() {
     }
 
     // Check our sets for a winner, if one exists break out of function
-    winner = checkWinnerHelper(results, winningCells);
-    if (winner !== 0) {return winner}
+    winner = checkWinnerHelper(results, winningCells, allowPublish);
+    if (winner !== 0) { return winner }
 
     // Check bottom-left to top-right diagonal
     results.clear();
@@ -203,8 +207,8 @@ function checkWinner() {
     }
 
     // Check our sets for a winner, if one exists break out of function
-    winner = checkWinnerHelper(results, winningCells);
-    if (winner !== 0) {return winner}
+    winner = checkWinnerHelper(results, winningCells, allowPublish);
+    if (winner !== 0) { return winner }
 
     // If no winner, return 0
     return 0;
@@ -214,15 +218,15 @@ function checkWinner() {
 // Reset game!
 function resetGame() {
     board = {};  // Board State
-    playerSymbol = 'X';  // What symbol the human will play with
+    playerSymbol = 'X';  // What symbol the human will play witha
     simSymbol = 'O';
     toMove = 'X';  // Whos turn it is
     enabled = true;
 
-	publishGameReset();
+    publishGameReset("");
 
     // Initialize each cell to no move
-    cells.forEach(function(cell, index) {
+    cells.forEach(function (cell, index) {
         board[cell] = '-';
     });
 
@@ -258,7 +262,7 @@ function makeMove(cell, player) {
         board[cell] = playerSymbol;
         toMove = simSymbol;
         renderBoard();
-	publishMove(cell);
+        publishMove(cell);
     }
     else if (player == 'web' && toMove != playerSymbol) {
         window.alert('It is not your turn!');
