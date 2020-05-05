@@ -42,27 +42,42 @@ ttl_X = 0
 ttl_Y = 0
 ttl_Theta = 0
 
+#coords
+coordDict = {"11":[2.5,8.5],"12":[5.5,8.5],"13":[8.5,8.5],"21":[2.5,5],"22":[5.5,5],"23":[8.5,5],"31":[2.5,2],"32":[5.5,2],"33":[8.5,2]}
+
 
 
 #arg type = string
 #arg data = empty
 def callback_ResetGame(arg):
-    #clear screen and redraw tic tac grid
+    #clear screen command?
+    print("Drawing board call")
+    #draw Board
+    drawBoard()
     pass
+
 
 
 #arg type = string
 #arg data = standard notation cell position (ie: 12)
 def callback_HumanTurnSubmitted(arg):
     #paint new player token on the tic tac grid
-    pass
+    print("human place move")
+    global coordDict
+    coord = coordDict.get(arg.data)
+    goToSquare(coord[0],coord[1])
+    drawX()
 
 
 #arg type = string
 #arg data = standard notation cell position (ie: 12)
 def callback_RobotTurnSubmitted(arg):
     #paint new player token on the tic tac grid by driving the robot to the position and drawing a shape
-    pass
+    print("robot place move")
+    global coordDict
+    coord = coordDict.get(arg.data)
+    goToSquare(coord[0],coord[1])
+    drawO()
 
 
 #arg type = string
@@ -97,7 +112,9 @@ def enableTurtle1Pen():
     off = 0
     svc_Turtle1Pen(r, g, b, width, off)
 
-def rotate(angle, vel_msg, velocity_publisher, clockwise):
+def rotate(angle, clockwise):
+    global pub_Turtle1Command
+    veloCmd = Twist()
     speed = 30
     PI = 3.1415926535897
     #Converting from angles to radians
@@ -105,32 +122,144 @@ def rotate(angle, vel_msg, velocity_publisher, clockwise):
     relative_angle = angle*2*PI/360
 
     #We wont use linear components
-    vel_msg.linear.x=0
-    vel_msg.linear.y=0
-    vel_msg.linear.z=0
-    vel_msg.angular.x = 0
-    vel_msg.angular.y = 0
+    veloCmd.linear.x=0
+    veloCmd.linear.y=0
+    veloCmd.linear.z=0
+    veloCmd.angular.x = 0
+    veloCmd.angular.y = 0
 
     # Checking if our movement is CW or CCW
     if clockwise:
-        vel_msg.angular.z = -abs(angular_speed)
+        veloCmd.angular.z = -abs(angular_speed)
     else:
-        vel_msg.angular.z = abs(angular_speed)
+        veloCmd.angular.z = abs(angular_speed)
     # Setting the current time for distance calculus
     t0 = rospy.Time.now().to_sec()
     current_angle = 0
     rospy.sleep(.1)
     while(current_angle <= relative_angle):
         print("should be rotating")
-        velocity_publisher.publish(vel_msg)
+        pub_Turtle1Command.publish(veloCmd)
         rospy.sleep(.1)
         t1 = rospy.Time.now().to_sec()
         current_angle = angular_speed*(t1-t0)
         rospy.sleep(.1)
     #Forcing our robot to stop
-    vel_msg.angular.z = 0
-    velocity_publisher.publish(vel_msg)
-    rospy.spin()
+    veloCmd.angular.z = 0
+    pub_Turtle1Command.publish(veloCmd)
+    #rospy.spin()
+
+def drawBoard():
+    global pub_Turtle1Command
+    print("Starting drawing")
+    PI = 3.1415926535897
+    veloCmd = Twist()
+    disableTurtle1Pen()
+    svc_Turtle1TeleportAbs(1, 3, 0 )
+    enableTurtle1Pen()
+    veloCmd.linear.x=9
+    pub_Turtle1Command.publish(veloCmd)
+    rospy.sleep(.1)
+    disableTurtle1Pen()
+    svc_Turtle1TeleportAbs(1, 7, 0)
+    enableTurtle1Pen()
+    veloCmd.linear.x=9
+    pub_Turtle1Command.publish(veloCmd)
+    disableTurtle1Pen()
+    svc_Turtle1TeleportAbs(4, 1, 90*2*PI/360 )
+    enableTurtle1Pen()
+    veloCmd.linear.x=9
+    pub_Turtle1Command.publish(veloCmd)
+    disableTurtle1Pen()
+    svc_Turtle1TeleportAbs(7, 1, 90*2*PI/360 )
+    enableTurtle1Pen()
+    veloCmd.linear.x=9
+    pub_Turtle1Command.publish(veloCmd)
+    print("Done Drawing")
+    disableTurtle1Pen()
+    svc_Turtle1TeleportAbs(1, 1, 0 )
+
+def drawX():
+    global ttl_X
+    global ttl_Y
+    global ttl_Theta
+    global pub_Turtle1Command
+    veloCmd = Twist()
+    enableTurtle1Pen()
+    rotate(ttl_Theta,False)
+    rospy.sleep(1)
+    veloCmd.linear.x=1
+    pub_Turtle1Command.publish(veloCmd)
+    rospy.sleep(1)
+    rotate(180,False)
+    rospy.sleep(1)
+    veloCmd.linear.x=2
+    pub_Turtle1Command.publish(veloCmd)
+    rospy.sleep(1)
+    rotate(180,False)
+    rospy.sleep(1)
+    veloCmd.linear.x=1
+    pub_Turtle1Command.publish(veloCmd)
+    rospy.sleep(1)
+    rotate(90,False)
+    veloCmd.linear.x=1
+    pub_Turtle1Command.publish(veloCmd)
+    rospy.sleep(1)
+    rotate(180,False)
+    rospy.sleep(1)
+    veloCmd.linear.x=2
+    pub_Turtle1Command.publish(veloCmd)
+    rospy.sleep(1)
+
+def drawO():
+    global ttl_X
+    global ttl_Y
+    global ttl_Theta
+    global pub_Turtle1Command
+    veloCmd = Twist()
+    disableTurtle1Pen()
+    rotate(abs(ttl_Theta-90),True)
+    rospy.sleep(1)
+    veloCmd.linear.x=0.5
+    pub_Turtle1Command.publish(veloCmd)
+    rospy.sleep(1)
+    enableTurtle1Pen()
+    rotate(45,False)
+    rospy.sleep(1)
+    veloCmd.linear.x=0.7
+    pub_Turtle1Command.publish(veloCmd)
+    rospy.sleep(1)
+    rotate(90,False)
+    rospy.sleep(1)
+    veloCmd.linear.x=0.7
+    pub_Turtle1Command.publish(veloCmd)
+    rospy.sleep(1)
+    rotate(90,False)
+    rospy.sleep(1)
+    veloCmd.linear.x=0.7
+    pub_Turtle1Command.publish(veloCmd)
+    rospy.sleep(1)
+    rotate(90,False)
+    rospy.sleep(1)
+    veloCmd.linear.x=0.7
+    pub_Turtle1Command.publish(veloCmd)
+    rospy.sleep(1)
+
+def goToSquare(x,y):
+    global ttl_X
+    global ttl_Y
+    global ttl_Theta
+    global pub_Turtle1Command
+    disableTurtle1Pen()
+    veloCmd = Twist()
+    distanceBetween = math.hypot(x-ttl_X,y-ttl_Y)
+    theta = (math.acos((x-ttl_X)/distanceBetween)*180)/math.pi
+    rotate(abs(ttl_Theta-theta),False)
+    rospy.sleep(1)
+    veloCmd.linear.x=distanceBetween
+    pub_Turtle1Command.publish(veloCmd)
+    rospy.sleep(1)
+
 
 def init(args):
     global g_Namespace
@@ -171,41 +300,10 @@ def init(args):
     svc_Turtle1TeleportAbs = rospy.ServiceProxy('/turtle1/teleport_absolute', TeleportAbsolute)
     svc_Turtle1Pen = rospy.ServiceProxy('/turtle1/set_pen', SetPen)
 
-
-    #svc_Turtle1TeleportAbs(2, 3, 90*2*PI/360 )
-    print("Starting drawing")
-    PI = 3.1415926535897
-    veloCmd = Twist()
+    #Start of the game
+    #drawBoard()
     disableTurtle1Pen()
-    svc_Turtle1TeleportAbs(1, 3, 0 )
-    enableTurtle1Pen()
-    veloCmd.linear.x=9
-    pub_Turtle1Command.publish(veloCmd)
-    rospy.sleep(.1)
-    disableTurtle1Pen()
-    svc_Turtle1TeleportAbs(1, 7, 0)
-    enableTurtle1Pen()
-    veloCmd.linear.x=9
-    pub_Turtle1Command.publish(veloCmd)
-    disableTurtle1Pen()
-    svc_Turtle1TeleportAbs(4, 1, 90*2*PI/360 )
-    enableTurtle1Pen()
-    veloCmd.linear.x=9
-    pub_Turtle1Command.publish(veloCmd)
-    disableTurtle1Pen()
-    svc_Turtle1TeleportAbs(7, 1, 90*2*PI/360 )
-    enableTurtle1Pen()
-    veloCmd.linear.x=9
-    pub_Turtle1Command.publish(veloCmd)
 
-
-
-    #rotate(90,veloCmd,pub_Turtle1Command,True)
-    print("Done Drawing")
-
-
-
-    print("Init ran... driver")
 
 
 
