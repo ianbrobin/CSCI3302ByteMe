@@ -42,6 +42,8 @@ ttl_X = 0
 ttl_Y = 0
 ttl_Theta = 0
 
+taskQueue = []
+
 #coords
 coordDict = {"11":[2.5,8.5],"12":[5.5,8.5],"13":[8.5,8.5],"21":[2.5,5],"22":[5.5,5],"23":[8.5,5],"31":[2.5,2],"32":[5.5,2],"33":[8.5,2]}
 
@@ -50,6 +52,9 @@ coordDict = {"11":[2.5,8.5],"12":[5.5,8.5],"13":[8.5,8.5],"21":[2.5,5],"22":[5.5
 #arg type = string
 #arg data = empty
 def callback_ResetGame(arg):
+    global svc_TurtleClear
+
+    svc_TurtleClear()
     #clear screen command?
     print("Drawing board call")
     #draw Board
@@ -64,9 +69,14 @@ def callback_HumanTurnSubmitted(arg):
     #paint new player token on the tic tac grid
     print("human place move")
     global coordDict
+    global taskQueue
     coord = coordDict.get(arg.data)
-    goToSquare(coord[0],coord[1])
-    drawX()
+
+    worker = lambda: (
+        goToSquare(coord[0],coord[1]),
+        drawX()
+    )
+    taskQueue.append(worker)
 
 
 #arg type = string
@@ -75,9 +85,14 @@ def callback_RobotTurnSubmitted(arg):
     #paint new player token on the tic tac grid by driving the robot to the position and drawing a shape
     print("robot place move")
     global coordDict
+    global taskQueue
     coord = coordDict.get(arg.data)
-    goToSquare(coord[0],coord[1])
-    drawO()
+
+    worker = lambda: (
+        goToSquare(coord[0],coord[1]),
+        drawO()
+    )
+    taskQueue.append(worker)
 
 
 #arg type = string
@@ -151,30 +166,40 @@ def rotate(angle, clockwise):
 
 def drawBoard():
     global pub_Turtle1Command
+    global svc_Turtle1TeleportAbs
+
     print("Starting drawing")
     PI = 3.1415926535897
     veloCmd = Twist()
+    #bottom horiz
     disableTurtle1Pen()
     svc_Turtle1TeleportAbs(1, 3, 0 )
     enableTurtle1Pen()
+    rospy.sleep(1)
     veloCmd.linear.x=9
     pub_Turtle1Command.publish(veloCmd)
-    rospy.sleep(.1)
+    rospy.sleep(1)
+    #top horiz
     disableTurtle1Pen()
     svc_Turtle1TeleportAbs(1, 7, 0)
     enableTurtle1Pen()
     veloCmd.linear.x=9
     pub_Turtle1Command.publish(veloCmd)
+    rospy.sleep(1)
+    #left vert
     disableTurtle1Pen()
     svc_Turtle1TeleportAbs(4, 1, 90*2*PI/360 )
     enableTurtle1Pen()
     veloCmd.linear.x=9
     pub_Turtle1Command.publish(veloCmd)
+    rospy.sleep(1)
+    #right vert
     disableTurtle1Pen()
     svc_Turtle1TeleportAbs(7, 1, 90*2*PI/360 )
     enableTurtle1Pen()
     veloCmd.linear.x=9
     pub_Turtle1Command.publish(veloCmd)
+    rospy.sleep(1)
     print("Done Drawing")
     disableTurtle1Pen()
     svc_Turtle1TeleportAbs(1, 1, 0 )
@@ -276,6 +301,8 @@ def init(args):
     global svc_Turtle1Pen
     global svc_Turtle1TeleportAbs
 
+    global taskQueue
+
 
     g_Namespace = args.namespace
     g_PlayerToken = args.player_token
@@ -283,7 +310,7 @@ def init(args):
     rospy.init_node("%s_TurtleDriver" % g_Namespace)
 
     # init subs
-    sub_GameReset = rospy.Subscriber("/%s/reset" % g_Namespace, String, callback_ResetGame)
+    sub_GameReset = rospy.Subscriber("/%s/GameReset" % g_Namespace, String, callback_ResetGame)
     sub_HumanTurnSubmitted = rospy.Subscriber('/%s/HumanTurnSubmitted' % g_Namespace, String, callback_HumanTurnSubmitted)
     sub_RobotTurnSubmitted = rospy.Subscriber('/%s/RobotTurnSubmitted' % g_Namespace, String, callback_RobotTurnSubmitted)
     sub_GameCompleted = rospy.Subscriber('/%s/GameCompleted' % g_Namespace, String, callback_GameCompleted)
@@ -303,6 +330,15 @@ def init(args):
     #Start of the game
     #drawBoard()
     disableTurtle1Pen()
+
+
+    while 1==1:
+        if(len(taskQueue) == 0):
+            rospy.sleep(.5)
+            continue
+        
+        nextTask = taskQueue.pop(0)
+        nextTask()
 
 
 
