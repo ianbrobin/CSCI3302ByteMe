@@ -45,7 +45,7 @@ ttl_Theta = 0.0
 taskQueue = []
 
 #coords
-coordDict = {"11":[2.5,8.5],"12":[5.5,8.5],"13":[8.5,8.5],"21":[2.5,5],"22":[5.5,5],"23":[8.5,5],"31":[2.5,2],"32":[5.5,2],"33":[8.5,2]}
+coordDict = {"11":[2.5,8.5],"12":[6.0,8.5],"13":[8.5,8.5],"21":[2.5,5],"22":[6.0,5],"23":[8.5,5],"31":[2.5,2],"32":[6.0,2],"33":[8.5,2]}
 
 
 def radToDegree(rad):
@@ -63,11 +63,15 @@ def coordDist(x1, x2, y1, y2):
 def callback_ResetGame(arg):
     global svc_TurtleClear
 
-    svc_TurtleClear()
+    taskQueue.clear()
     #clear screen command?
     print("Drawing board call")
-    #draw Board
-    drawBoard()
+
+    worker = lambda: (
+        svc_TurtleClear(),
+        drawBoard()
+    )
+    taskQueue.append(worker)
     pass
 
 
@@ -139,7 +143,7 @@ def enableTurtle1Pen():
 def rotate(angle, clockwise):
     global pub_Turtle1Command
     veloCmd = Twist()
-    speed = 30
+    speed = 70
     PI = 3.1415926535897
     #Converting from angles to radians
     angular_speed = speed*2*PI/360
@@ -182,7 +186,6 @@ def drawBoard():
     disableTurtle1Pen()
     svc_Turtle1TeleportAbs(1, 3, 0 )
     enableTurtle1Pen()
-    rospy.sleep(1)
     veloCmd.linear.x=9
     pub_Turtle1Command.publish(veloCmd)
     rospy.sleep(1)
@@ -207,76 +210,119 @@ def drawBoard():
     veloCmd.linear.x=9
     pub_Turtle1Command.publish(veloCmd)
     rospy.sleep(1)
-    #go home
-    disableTurtle1Pen()
-    svc_Turtle1TeleportAbs(1, 1, 0 )
+
 
 def drawX():
     global ttl_X
     global ttl_Y
     global ttl_Theta
     global pub_Turtle1Command
+
+    multFactor = 4.0
     veloCmd = Twist()
+
+
     enableTurtle1Pen()
     rotate(ttl_Theta,False)
-    rospy.sleep(1)
-    veloCmd.linear.x=1
+    veloCmd.linear.x=1 * multFactor
     pub_Turtle1Command.publish(veloCmd)
-    rospy.sleep(1)
+    rospy.sleep(1 / multFactor)
+    #stop
+    veloCmd.linear.x=0
+    pub_Turtle1Command.publish(veloCmd)
+
+    
     rotate(180,False)
-    rospy.sleep(1)
-    veloCmd.linear.x=2
+    veloCmd.linear.x=2 * multFactor
     pub_Turtle1Command.publish(veloCmd)
-    rospy.sleep(1)
+    rospy.sleep(1 / multFactor)
+    #stop
+    veloCmd.linear.x=0
+    pub_Turtle1Command.publish(veloCmd)
+
+
     rotate(180,False)
-    rospy.sleep(1)
-    veloCmd.linear.x=1
+    veloCmd.linear.x=1 * multFactor
     pub_Turtle1Command.publish(veloCmd)
-    rospy.sleep(1)
+    rospy.sleep(1 / multFactor)
+    #stop
+    veloCmd.linear.x=0
+    pub_Turtle1Command.publish(veloCmd)
+
+
     rotate(90,False)
-    veloCmd.linear.x=1
+    veloCmd.linear.x=1 * multFactor
     pub_Turtle1Command.publish(veloCmd)
-    rospy.sleep(1)
+    rospy.sleep(1 / multFactor)
+    #stop
+    veloCmd.linear.x=0
+    pub_Turtle1Command.publish(veloCmd)
+
+
     rotate(180,False)
-    rospy.sleep(1)
-    veloCmd.linear.x=2
+    veloCmd.linear.x=2 * multFactor
     pub_Turtle1Command.publish(veloCmd)
-    rospy.sleep(1)
+    rospy.sleep(1 / multFactor)
+    #stop
+    veloCmd.linear.x=0
+    pub_Turtle1Command.publish(veloCmd)
 
 def drawO():
     global ttl_X
     global ttl_Y
     global ttl_Theta
     global pub_Turtle1Command
+
+    multFactor = 3.0
     veloCmd = Twist()
-    disableTurtle1Pen()
+
+
+    enableTurtle1Pen()
     rotate(abs(ttl_Theta-90),True)
-    rospy.sleep(1)
-    veloCmd.linear.x=0.5
+    veloCmd.linear.x=0.5 * multFactor
     pub_Turtle1Command.publish(veloCmd)
-    rospy.sleep(1)
+    rospy.sleep(1 / multFactor)
+    #stop
+    veloCmd.linear.x=0
+    pub_Turtle1Command.publish(veloCmd)
+
     enableTurtle1Pen()
     rotate(45,False)
-    rospy.sleep(1)
     pub_Turtle1Command.publish(veloCmd)
-    rospy.sleep(1)
+    rospy.sleep(1 / multFactor)
+    #stop
+    veloCmd.linear.x=0
+    pub_Turtle1Command.publish(veloCmd)
+
     rotate(90,False)
-    rospy.sleep(1)
-    veloCmd.linear.x=0.7
+    veloCmd.linear.x=0.7 * multFactor
     pub_Turtle1Command.publish(veloCmd)
-    rospy.sleep(1)
+    rospy.sleep(1 / multFactor)
+    #stop
+    veloCmd.linear.x=0
+    pub_Turtle1Command.publish(veloCmd)
+
     rotate(90,False)
-    rospy.sleep(1)
-    veloCmd.linear.x=0.7
+    veloCmd.linear.x=0.7 * multFactor
     pub_Turtle1Command.publish(veloCmd)
-    rospy.sleep(1)
+    rospy.sleep(1 / multFactor)
+    #stop
+    veloCmd.linear.x=0
+    pub_Turtle1Command.publish(veloCmd)
+
     rotate(90,False)
-    rospy.sleep(1)
-    veloCmd.linear.x=0.7
+    veloCmd.linear.x=0.7 * multFactor
     pub_Turtle1Command.publish(veloCmd)
-    rospy.sleep(1)
+    rospy.sleep(1 / multFactor)
+    #stop
+    veloCmd.linear.x=0
+    pub_Turtle1Command.publish(veloCmd)
+
+
 
 def goToSquare(x,y):
+    multFactor = 1.5
+
     print("GOTO: (", x, ", ", y, ")")
     global ttl_X
     global ttl_Y
@@ -295,10 +341,13 @@ def goToSquare(x,y):
         clockwise = True
     
     rotate(abs(theta - ttl_Theta), clockwise)
-    rospy.sleep(1)
-    veloCmd.linear.x=distanceBetween
+    veloCmd.linear.x=distanceBetween * multFactor
     pub_Turtle1Command.publish(veloCmd)
-    rospy.sleep(1)
+    rospy.sleep(1 / multFactor)
+    
+    #stop
+    veloCmd.linear.x=0
+    pub_Turtle1Command.publish(veloCmd)
 
 
 def init(args):
