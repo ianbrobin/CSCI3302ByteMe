@@ -38,15 +38,24 @@ svc_TurtleClear = ""
 svc_Turtle1Pen = ""
 svc_Turtle1TeleportAbs = ""
 
-ttl_X = 0
-ttl_Y = 0
-ttl_Theta = 0
+ttl_X = 0.0
+ttl_Y = 0.0
+ttl_Theta = 0.0
 
 taskQueue = []
 
 #coords
 coordDict = {"11":[2.5,8.5],"12":[5.5,8.5],"13":[8.5,8.5],"21":[2.5,5],"22":[5.5,5],"23":[8.5,5],"31":[2.5,2],"32":[5.5,2],"33":[8.5,2]}
 
+
+def radToDegree(rad):
+    return (rad * 180.0) / math.pi
+
+def degreeToRad(deg):
+    return (deg * math.pi) / 180.0
+
+def coordDist(x1, x2, y1, y2):
+    return math.sqrt(((x1 - x2) ** 2) + ((y1 - y2) ** 2))
 
 
 #arg type = string
@@ -108,7 +117,7 @@ def callback_TurtlePose(arg):
     global ttl_Theta
     ttl_X = arg.x
     ttl_Y = arg.y
-    ttl_Theta = arg.theta
+    ttl_Theta = radToDegree(arg.theta)
 
 
 def disableTurtle1Pen():
@@ -153,7 +162,6 @@ def rotate(angle, clockwise):
     current_angle = 0
     rospy.sleep(.1)
     while(current_angle <= relative_angle):
-        print("should be rotating")
         pub_Turtle1Command.publish(veloCmd)
         rospy.sleep(.1)
         t1 = rospy.Time.now().to_sec()
@@ -168,7 +176,6 @@ def drawBoard():
     global pub_Turtle1Command
     global svc_Turtle1TeleportAbs
 
-    print("Starting drawing")
     PI = 3.1415926535897
     veloCmd = Twist()
     #bottom horiz
@@ -200,7 +207,7 @@ def drawBoard():
     veloCmd.linear.x=9
     pub_Turtle1Command.publish(veloCmd)
     rospy.sleep(1)
-    print("Done Drawing")
+    #go home
     disableTurtle1Pen()
     svc_Turtle1TeleportAbs(1, 1, 0 )
 
@@ -251,7 +258,6 @@ def drawO():
     enableTurtle1Pen()
     rotate(45,False)
     rospy.sleep(1)
-    veloCmd.linear.x=0.7
     pub_Turtle1Command.publish(veloCmd)
     rospy.sleep(1)
     rotate(90,False)
@@ -271,15 +277,24 @@ def drawO():
     rospy.sleep(1)
 
 def goToSquare(x,y):
+    print("GOTO: (", x, ", ", y, ")")
     global ttl_X
     global ttl_Y
     global ttl_Theta
     global pub_Turtle1Command
+    print("POS: (", ttl_X, ", ", ttl_Y, ", ", ttl_Theta, ")")
     disableTurtle1Pen()
     veloCmd = Twist()
-    distanceBetween = math.hypot(x-ttl_X,y-ttl_Y)
-    theta = (math.acos((x-ttl_X)/distanceBetween)*180)/math.pi
-    rotate(abs(ttl_Theta-theta),False)
+    distanceBetween = coordDist(x, ttl_X, y, ttl_Y)
+    print("DIST: ", distanceBetween)
+    theta = radToDegree(math.atan2(y-ttl_Y, x-ttl_X))
+    print("ABS THETA: ", theta)
+    print("REL THETA: ", theta - ttl_Theta)
+    clockwise = False
+    if((theta - ttl_Theta) < 0):
+        clockwise = True
+    
+    rotate(abs(theta - ttl_Theta), clockwise)
     rospy.sleep(1)
     veloCmd.linear.x=distanceBetween
     pub_Turtle1Command.publish(veloCmd)
@@ -339,6 +354,7 @@ def init(args):
         
         nextTask = taskQueue.pop(0)
         nextTask()
+
 
 
 
